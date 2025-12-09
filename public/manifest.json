@@ -1,0 +1,16 @@
+{
+    "name": "Locked In",
+    "short_name": "Locked In",
+    "description": "Focus on what matters. No distractions.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#000000",
+    "theme_color": "#000000",
+    "icons": [
+        {
+            "src": "/icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml"
+        }
+    ]
+}

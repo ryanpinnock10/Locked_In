@@ -7,19 +7,23 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
+import { Wallet } from "@/components/Wallet"
+
 export interface Session {
     id: string
     startTime: number
     duration: number // in seconds
     status: 'completed' | 'failed'
     cost: number
+    intent?: string
 }
 
 interface DashboardProps {
-    onBack: () => void
+    onBack?: () => void // Optional now as we might not use it in tab mode
+    onLockIn: () => void
 }
 
-export function Dashboard({ onBack }: DashboardProps) {
+export function Dashboard({ onBack, onLockIn }: DashboardProps) {
     const [sessions, setSessions] = useState<Session[]>([])
 
     useEffect(() => {
@@ -54,36 +58,45 @@ export function Dashboard({ onBack }: DashboardProps) {
             className="min-h-screen bg-black text-white p-4 md:p-8"
         >
             <div className="max-w-4xl mx-auto space-y-8">
-                <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={onBack} className="text-zinc-400 hover:text-white">
-                        <ArrowLeft className="w-6 h-6" />
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        {onBack && (
+                            <Button variant="ghost" size="icon" onClick={onBack} className="text-zinc-400 hover:text-white">
+                                <ArrowLeft className="w-6 h-6" />
+                            </Button>
+                        )}
+                        <h1 className="text-3xl font-bold tracking-tight">Your Progress</h1>
+                    </div>
+                    <Button onClick={onLockIn} className="bg-blue-600 hover:bg-blue-500 text-white">
+                        Start Session
                     </Button>
-                    <h1 className="text-3xl font-bold tracking-tight">Your Progress</h1>
                 </div>
+
+                <Wallet />
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Card className="bg-zinc-900/50 border-zinc-800 p-6 flex flex-col items-center justify-center gap-2">
                         <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center mb-2">
                             <Clock className="w-6 h-6 text-blue-500" />
                         </div>
-                        <div className="text-3xl font-bold font-mono">{formatDuration(totalTime)}</div>
-                        <div className="text-xs text-zinc-500 uppercase tracking-widest">Total Focus</div>
+                        <div className="text-3xl font-bold font-mono text-white">{formatDuration(totalTime)}</div>
+                        <div className="text-xs text-zinc-400 uppercase tracking-widest">Total Focus</div>
                     </Card>
 
                     <Card className="bg-zinc-900/50 border-zinc-800 p-6 flex flex-col items-center justify-center gap-2">
                         <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center mb-2">
                             <Trophy className="w-6 h-6 text-green-500" />
                         </div>
-                        <div className="text-3xl font-bold font-mono">{completedSessions}</div>
-                        <div className="text-xs text-zinc-500 uppercase tracking-widest">Sessions Completed</div>
+                        <div className="text-3xl font-bold font-mono text-white">{completedSessions}</div>
+                        <div className="text-xs text-zinc-400 uppercase tracking-widest">Sessions Completed</div>
                     </Card>
 
                     <Card className="bg-zinc-900/50 border-zinc-800 p-6 flex flex-col items-center justify-center gap-2">
                         <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center mb-2">
                             <DollarSign className="w-6 h-6 text-purple-500" />
                         </div>
-                        <div className="text-3xl font-bold font-mono">${totalCost.toFixed(2)}</div>
-                        <div className="text-xs text-zinc-500 uppercase tracking-widest">Value Committed</div>
+                        <div className="text-3xl font-bold font-mono text-white">${totalCost.toFixed(2)}</div>
+                        <div className="text-xs text-zinc-400 uppercase tracking-widest">Value Committed</div>
                     </Card>
                 </div>
 
@@ -107,10 +120,10 @@ export function Dashboard({ onBack }: DashboardProps) {
                                             )}
                                             <div>
                                                 <div className="font-medium text-zinc-200">
-                                                    {formatDuration(session.duration)} Focus
+                                                    {session.intent || "Focus Session"}
                                                 </div>
                                                 <div className="text-xs text-zinc-500">
-                                                    {formatDate(session.startTime)}
+                                                    {formatDuration(session.duration)} • {formatDate(session.startTime)}
                                                 </div>
                                             </div>
                                         </div>

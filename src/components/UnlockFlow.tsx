@@ -128,7 +128,7 @@ export function UnlockFlow({ onUnlockComplete, onCancel }: UnlockFlowProps) {
                                     value={confirmationText}
                                     onChange={(e) => setConfirmationText(e.target.value)}
                                     placeholder="I give up"
-                                    className="bg-zinc-950 border-zinc-800 text-center font-mono placeholder:text-zinc-700"
+                                    className="bg-zinc-950 border-zinc-800 text-center font-mono placeholder:text-zinc-700 text-white"
                                 />
                             </motion.div>
 
