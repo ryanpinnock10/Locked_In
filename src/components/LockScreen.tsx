@@ -1,30 +1,22 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Lock, Unlock } from "lucide-react"
+import { Unlock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { AnimatedLock } from "@/components/AnimatedLock"
 
 interface LockScreenProps {
-    initialTime: number // in seconds
+    timeLeft: number
+    totalDuration: number
     onUnlock: () => void
+    onExtend: () => void
 }
 
-export function LockScreen({ initialTime, onUnlock }: LockScreenProps) {
-    const [timeLeft, setTimeLeft] = useState(initialTime)
+export function LockScreen({ timeLeft, totalDuration, onUnlock, onExtend }: LockScreenProps) {
     const [isHoveringUnlock, setIsHoveringUnlock] = useState(false)
-
-    useEffect(() => {
-        if (timeLeft <= 0) return
-
-        const timer = setInterval(() => {
-            setTimeLeft((prev) => prev - 1)
-        }, 1000)
-
-        return () => clearInterval(timer)
-    }, [timeLeft])
 
     const formatTime = (seconds: number) => {
         const h = Math.floor(seconds / 3600)
@@ -33,7 +25,7 @@ export function LockScreen({ initialTime, onUnlock }: LockScreenProps) {
         return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`
     }
 
-    const progress = (timeLeft / initialTime) * 100
+    const progress = (timeLeft / totalDuration) * 100
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-4 relative overflow-hidden">
@@ -45,13 +37,16 @@ export function LockScreen({ initialTime, onUnlock }: LockScreenProps) {
 
             <Card className="z-10 w-full max-w-md bg-zinc-900/50 border-zinc-800 backdrop-blur-xl p-8 flex flex-col items-center gap-8 shadow-2xl shadow-blue-900/20">
                 <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
+                    variants={{
+                        hidden: { scale: 0.8, opacity: 0 },
+                        visible: { scale: 1, opacity: 1 },
+                        exit: { scale: 0.8, opacity: 0, transition: { delay: 0.2 } }
+                    }}
                     transition={{ duration: 0.5 }}
                     className="relative"
                 >
                     <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full" />
-                    <Lock className="w-24 h-24 text-blue-500 relative z-10" />
+                    <AnimatedLock />
                 </motion.div>
 
                 <div className="text-center space-y-2">
@@ -69,27 +64,36 @@ export function LockScreen({ initialTime, onUnlock }: LockScreenProps) {
                     </div>
                 </div>
 
-                <Button
-                    variant="ghost"
-                    className="group relative overflow-hidden hover:bg-red-950/30 hover:text-red-400 transition-all duration-300"
-                    onMouseEnter={() => setIsHoveringUnlock(true)}
-                    onMouseLeave={() => setIsHoveringUnlock(false)}
-                    onClick={onUnlock}
-                >
-                    <span className="relative z-10 flex items-center gap-2">
-                        <Unlock className="w-4 h-4" />
-                        Emergency Unlock
-                    </span>
-                    {isHoveringUnlock && (
-                        <motion.div
-                            layoutId="unlock-hover"
-                            className="absolute inset-0 bg-red-500/10"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                        />
-                    )}
-                </Button>
+                <div className="flex flex-col gap-3 w-full">
+                    <Button
+                        className="w-full bg-blue-600 hover:bg-blue-500 text-white"
+                        onClick={onExtend}
+                    >
+                        Extend (+15m) - $1.50
+                    </Button>
+
+                    <Button
+                        variant="outline"
+                        className="group relative overflow-hidden border-zinc-800 text-zinc-400 hover:bg-red-950/30 hover:text-red-400 hover:border-red-900/50 transition-all duration-300"
+                        onMouseEnter={() => setIsHoveringUnlock(true)}
+                        onMouseLeave={() => setIsHoveringUnlock(false)}
+                        onClick={onUnlock}
+                    >
+                        <span className="relative z-10 flex items-center gap-2 justify-center w-full">
+                            <Unlock className="w-4 h-4" />
+                            Emergency Unlock
+                        </span>
+                        {isHoveringUnlock && (
+                            <motion.div
+                                layoutId="unlock-hover"
+                                className="absolute inset-0 bg-red-500/10"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                            />
+                        )}
+                    </Button>
+                </div>
             </Card>
         </div>
     )
