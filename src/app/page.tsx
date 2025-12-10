@@ -343,7 +343,7 @@ export default function Home() {
         {renderTabNavigation()}
 
         {/* Content Area */}
-        <div className="pt-20 px-4 h-screen overflow-hidden">
+        <div className="pt-20 px-4">
           <AnimatePresence mode="wait">
             {activeTab === 'dashboard' ? (
               <motion.div
@@ -351,7 +351,6 @@ export default function Home() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
-                className="h-full"
               >
                 <Dashboard onLockIn={() => setActiveTab('lock-in')} />
               </motion.div>

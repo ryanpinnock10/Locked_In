@@ -5,7 +5,6 @@ import { motion } from "framer-motion"
 import { ArrowLeft, Clock, DollarSign, Trophy, XCircle, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
 
 import { Wallet } from "@/components/Wallet"
 
@@ -23,8 +22,11 @@ interface DashboardProps {
     onLockIn: () => void
 }
 
+type TimePeriod = '1d' | '7d' | '30d' | '90d' | 'all'
+
 export function Dashboard({ onBack, onLockIn }: DashboardProps) {
     const [sessions, setSessions] = useState<Session[]>([])
+    const [timePeriod, setTimePeriod] = useState<TimePeriod>('all')
 
     useEffect(() => {
         const stored = localStorage.getItem("lockedIn_sessions")
@@ -33,9 +35,27 @@ export function Dashboard({ onBack, onLockIn }: DashboardProps) {
         }
     }, [])
 
-    const totalTime = sessions.reduce((acc, s) => s.status === 'completed' ? acc + s.duration : acc, 0)
-    const totalCost = sessions.reduce((acc, s) => acc + s.cost, 0)
-    const completedSessions = sessions.filter(s => s.status === 'completed').length
+    // Filter sessions based on time period
+    const getFilteredSessions = () => {
+        if (timePeriod === 'all') return sessions
+
+        const now = Date.now()
+        const periodMs: Record<Exclude<TimePeriod, 'all'>, number> = {
+            '1d': 24 * 60 * 60 * 1000,
+            '7d': 7 * 24 * 60 * 60 * 1000,
+            '30d': 30 * 24 * 60 * 60 * 1000,
+            '90d': 90 * 24 * 60 * 60 * 1000,
+        }
+
+        const cutoff = now - periodMs[timePeriod as Exclude<TimePeriod, 'all'>]
+        return sessions.filter(s => s.startTime >= cutoff)
+    }
+
+    const filteredSessions = getFilteredSessions()
+
+    const totalTime = filteredSessions.reduce((acc, s) => s.status === 'completed' ? acc + s.duration : acc, 0)
+    const totalCost = filteredSessions.reduce((acc, s) => acc + s.cost, 0)
+    const completedSessions = filteredSessions.filter(s => s.status === 'completed').length
 
     const formatDuration = (seconds: number) => {
         const h = Math.floor(seconds / 3600)
@@ -49,6 +69,14 @@ export function Dashboard({ onBack, onLockIn }: DashboardProps) {
             month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
         })
     }
+
+    const timePeriodButtons: { value: TimePeriod; label: string }[] = [
+        { value: '1d', label: '1D' },
+        { value: '7d', label: '7D' },
+        { value: '30d', label: '30D' },
+        { value: '90d', label: '90D' },
+        { value: 'all', label: 'All' },
+    ]
 
     return (
         <motion.div
@@ -73,6 +101,25 @@ export function Dashboard({ onBack, onLockIn }: DashboardProps) {
                 </div>
 
                 <Wallet />
+
+                {/* Time Period Filter */}
+                <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-semibold text-zinc-300">Analytics</h2>
+                    <div className="flex gap-1 bg-zinc-900/50 p-1 rounded-lg border border-zinc-800">
+                        {timePeriodButtons.map((period) => (
+                            <button
+                                key={period.value}
+                                onClick={() => setTimePeriod(period.value)}
+                                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${timePeriod === period.value
+                                    ? "bg-zinc-800 text-white shadow-sm"
+                                    : "text-zinc-400 hover:text-white"
+                                    }`}
+                            >
+                                {period.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Card className="bg-zinc-900/50 border-zinc-800 p-6 flex flex-col items-center justify-center gap-2">
@@ -102,44 +149,48 @@ export function Dashboard({ onBack, onLockIn }: DashboardProps) {
 
                 <div className="space-y-4">
                     <h2 className="text-xl font-semibold text-zinc-300">Recent Sessions</h2>
-                    <ScrollArea className="h-[400px] rounded-md border border-zinc-800 bg-zinc-900/20 p-4">
-                        <div className="space-y-3">
-                            {sessions.length === 0 ? (
-                                <div className="text-center text-zinc-500 py-8">No sessions yet. Lock in to start!</div>
-                            ) : (
-                                sessions.map((session) => (
-                                    <div
-                                        key={session.id}
-                                        className="flex items-center justify-between p-4 rounded-lg bg-zinc-900/50 border border-zinc-800/50 hover:border-zinc-700 transition-colors"
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            {session.status === 'completed' ? (
-                                                <CheckCircle className="w-5 h-5 text-green-500" />
-                                            ) : (
-                                                <XCircle className="w-5 h-5 text-red-500" />
-                                            )}
-                                            <div>
-                                                <div className="font-medium text-zinc-200">
-                                                    {session.intent || "Focus Session"}
-                                                </div>
-                                                <div className="text-xs text-zinc-500">
-                                                    {formatDuration(session.duration)} • {formatDate(session.startTime)}
-                                                </div>
+
+                    {filteredSessions.length === 0 ? (
+                        <div className="text-center text-zinc-500 py-8 border border-zinc-800 rounded-md bg-zinc-900/20">
+                            {timePeriod === 'all'
+                                ? 'No sessions yet. Lock in to start!'
+                                : `No sessions in the last ${timePeriod.toUpperCase()}`
+                            }
+                        </div>
+                    ) : (
+                        <div className="h-[500px] overflow-y-scroll rounded-md border border-zinc-800 bg-zinc-900/20 p-4 flex flex-col gap-3 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-zinc-900">
+                            {filteredSessions.map((session, index) => (
+                                <div
+                                    key={`session-${index}`}
+                                    className="flex-shrink-0 flex items-center justify-between p-4 rounded-lg bg-zinc-900/50 border border-zinc-800/50 hover:border-zinc-700 transition-colors"
+                                >
+                                    <div className="flex items-center gap-4">
+                                        {session.status === 'completed' ? (
+                                            <CheckCircle className="w-5 h-5 text-green-500" />
+                                        ) : (
+                                            <XCircle className="w-5 h-5 text-red-500" />
+                                        )}
+                                        <div>
+                                            <div className="font-medium text-zinc-200">
+                                                {session.intent || "Focus Session"}
                                             </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className={`font-mono font-bold ${session.status === 'completed' ? 'text-green-400' : 'text-red-400'}`}>
-                                                {session.status === 'completed' ? '+$' : '-$'}{session.cost.toFixed(2)}
-                                            </div>
-                                            <div className="text-xs text-zinc-500 uppercase">
-                                                {session.status}
+                                            <div className="text-xs text-zinc-500">
+                                                {formatDuration(session.duration)} • {formatDate(session.startTime)}
                                             </div>
                                         </div>
                                     </div>
-                                ))
-                            )}
+                                    <div className="text-right">
+                                        <div className={`font-mono font-bold ${session.status === 'completed' ? 'text-green-400' : 'text-red-400'}`}>
+                                            {session.status === 'completed' ? '+$' : '-$'}{session.cost.toFixed(2)}
+                                        </div>
+                                        <div className="text-xs text-zinc-500 uppercase">
+                                            {session.status}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
-                    </ScrollArea>
+                    )}
                 </div>
             </div>
         </motion.div>
