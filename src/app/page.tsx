@@ -11,6 +11,7 @@ import { UnlockFlow } from "@/components/UnlockFlow"
 import { Dashboard, Session } from "@/components/Dashboard"
 import { AIAssistant } from "@/components/AIAssistant"
 import { AISuggestion } from "@/app/api/ai/suggest/route"
+import { DeepLockDisclaimer } from "@/components/DeepLockDisclaimer"
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs"
 
 export default function Home() {
@@ -28,6 +29,8 @@ export default function Home() {
   const [intent, setIntent] = useState("")
   const [showAIAssistant, setShowAIAssistant] = useState(false)
   const [aiSuggestion, setAiSuggestion] = useState<AISuggestion | null>(null)
+  const [showDeepLockDisclaimer, setShowDeepLockDisclaimer] = useState(false)
+  const [pendingDuration, setPendingDuration] = useState<number | undefined>(undefined)
 
   // Effect: When user signs in, ensure they land on dashboard
   useEffect(() => {
@@ -42,26 +45,35 @@ export default function Home() {
   useEffect(() => {
     if (!isLocked) return
 
-    const handleVisibilityChange = () => {
+    const handleVisibilityChange = async () => {
       if (document.hidden) {
-        document.title = "COME BACK! 😡"
-        // Alarm removed
-      } else {
-        document.title = "Locked In"
+        // Tab switch detected - FAIL IMMEDIATELY
+        saveSession('failed')
+        setIsLocked(false)
+        setTimeLeft(0)
+        localStorage.removeItem("activeSessionId")
+        localStorage.removeItem("targetEndTime")
+        localStorage.removeItem("totalDuration")
+        localStorage.removeItem("sessionIntent")
+        releaseWakeLock()
+        if (document.fullscreenElement) {
+          document.exitFullscreen()
+        }
+        alert("CHEATER DETECTED! 😡 Session failed.")
       }
     }
 
-    const handleBlur = () => {
-      // Optional: also trigger on window blur (clicking outside browser)
-      // document.title = "EYES ON THE PRIZE 👀"
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ""
     }
 
     document.addEventListener("visibilitychange", handleVisibilityChange)
-    window.addEventListener("blur", handleBlur)
+    window.addEventListener("beforeunload", handleBeforeUnload)
 
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange)
-      window.removeEventListener("blur", handleBlur)
+      window.removeEventListener("beforeunload", handleBeforeUnload)
       document.title = "Locked In"
     }
   }, [isLocked])
@@ -141,6 +153,9 @@ export default function Home() {
           localStorage.removeItem("totalDuration")
           localStorage.removeItem("sessionIntent")
           releaseWakeLock()
+          if (document.fullscreenElement) {
+            document.exitFullscreen()
+          }
           saveSession('completed')
           return 0
         }
@@ -154,6 +169,11 @@ export default function Home() {
   const handleLockIn = () => {
     if (!isSignedIn || !intent.trim()) return
     setShowAIAssistant(true)
+  }
+
+  const triggerDeepLock = (duration?: number) => {
+    setPendingDuration(duration)
+    setShowDeepLockDisclaimer(true)
   }
 
   const startSession = async (suggestedDuration?: number) => {
@@ -199,7 +219,17 @@ export default function Home() {
       setTotalDuration(seconds)
       if (suggestedDuration) setDuration([suggestedDuration])
       setIsLocked(true)
+      setShowAIAssistant(false) // Close AI assistant after starting session
       requestWakeLock()
+
+      // REQUEST FULLSCREEN
+      try {
+        if (document.documentElement.requestFullscreen) {
+          await document.documentElement.requestFullscreen()
+        }
+      } catch (err) {
+        console.error("Fullscreen failed:", err)
+      }
 
     } catch (error) {
       console.error("Lock In failed", error)
@@ -432,11 +462,24 @@ export default function Home() {
                     onAccept={(suggestion) => {
                       setAiSuggestion(suggestion)
                       setShowAIAssistant(false)
-                      startSession(suggestion.estimatedDuration)
+                      triggerDeepLock(suggestion.estimatedDuration)
                     }}
                     onSkip={() => {
                       setShowAIAssistant(false)
-                      startSession()
+                      triggerDeepLock()
+                    }}
+                  />
+                )}
+
+                {showDeepLockDisclaimer && (
+                  <DeepLockDisclaimer
+                    onConfirm={() => {
+                      setShowDeepLockDisclaimer(false)
+                      startSession(pendingDuration)
+                    }}
+                    onCancel={() => {
+                      setShowDeepLockDisclaimer(false)
+                      setPendingDuration(undefined)
                     }}
                   />
                 )}
