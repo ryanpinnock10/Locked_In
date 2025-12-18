@@ -45,9 +45,9 @@ export default function Home() {
   useEffect(() => {
     if (!isLocked) return
 
-    const handleVisibilityChange = async () => {
-      if (document.hidden) {
-        // Tab switch detected - FAIL IMMEDIATELY
+    const handleSecurityEvent = async () => {
+      if (document.hidden || !document.hasFocus()) {
+        // Tab switch OR Window/App switch detected - FAIL IMMEDIATELY
         saveSession('failed')
         setIsLocked(false)
         setTimeLeft(0)
@@ -59,7 +59,7 @@ export default function Home() {
         if (document.fullscreenElement) {
           document.exitFullscreen()
         }
-        alert("CHEATER DETECTED! 😡 Session failed.")
+        alert("CHEATER DETECTED! 😡 Session failed because you switch tabs or applications.")
       }
     }
 
@@ -68,11 +68,13 @@ export default function Home() {
       e.returnValue = ""
     }
 
-    document.addEventListener("visibilitychange", handleVisibilityChange)
+    document.addEventListener("visibilitychange", handleSecurityEvent)
+    window.addEventListener("blur", handleSecurityEvent)
     window.addEventListener("beforeunload", handleBeforeUnload)
 
     return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange)
+      document.removeEventListener("visibilitychange", handleSecurityEvent)
+      window.removeEventListener("blur", handleSecurityEvent)
       window.removeEventListener("beforeunload", handleBeforeUnload)
       document.title = "Locked In"
     }

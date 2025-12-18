@@ -92,12 +92,12 @@ export default async function AdminUsersPage() {
                                 <tr key={user.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
                                     <td className="p-4">
                                         <div className="font-medium text-white">{user.email}</div>
-                                        <div className="text-xs text-zinc-300">{user.id}</div>
+                                        <div className="text-xs text-zinc-100 opacity-70">{user.id}</div>
                                     </td>
                                     <td className="p-4 text-sm text-zinc-200">
                                         {new Date(user.createdAt).toLocaleDateString()}
                                     </td>
-                                    <td className="p-4 text-sm text-zinc-200">
+                                    <td className="p-4 text-sm text-white">
                                         {user._count.sessions}
                                     </td>
                                     <td className="p-4 text-sm font-mono text-green-400">

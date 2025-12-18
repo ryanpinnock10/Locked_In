@@ -94,12 +94,12 @@ export default async function AdminSessionsPage() {
                             {stats.recentSessions.map((session) => (
                                 <tr key={session.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
                                     <td className="p-4">
-                                        <div className="text-sm font-medium">{session.user.email}</div>
+                                        <div className="text-sm font-medium text-white">{session.user.email}</div>
                                     </td>
-                                    <td className="p-4 text-sm text-zinc-300">
+                                    <td className="p-4 text-sm text-white">
                                         {session.intent}
                                     </td>
-                                    <td className="p-4 text-sm">
+                                    <td className="p-4 text-sm text-white font-medium">
                                         {session.duration}m
                                     </td>
                                     <td className="p-4 text-sm">
