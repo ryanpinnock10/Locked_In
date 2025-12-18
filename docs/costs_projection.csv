@@ -1,0 +1,8 @@
+Category,Service,Monthly Cost (USD),Notes
+Authentication,Clerk,$0.00,Free tier up to 10k MAUs
+Payments,Stripe,$43.50,"2.9% + $0.30 per transaction (assuming average $10 deposit, 50 users)"
+Database,Supabase,$0.00,Free tier includes 500MB DB
+Hosting,Vercel,$0.00,Pro plan is $20/mo but Hobby is free for non-commercial
+AI API,OpenAI,$1.50,"gpt-4o-mini is ~$0.15/1M tokens (assuming 100 calls per user/mo)"
+Marketing,Meta/Google Ads,$100.00,Starting budget for user acquisition
+Total,,$145.00,

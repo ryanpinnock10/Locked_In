@@ -13,10 +13,12 @@ model User {
   id        String   @id // This will be the Clerk User ID
   email     String   @unique
   balance   Int      @default(0) // Stored in cents (e.g., 500 = $5.00)
+  role      UserRole @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   transactions Transaction[]
+  sessions     Session[]
 }
 
 model Transaction {
@@ -28,6 +30,28 @@ model Transaction {
   createdAt   DateTime        @default(now())
 
   user User @relation(fields: [userId], references: [id])
+}
+
+model Session {
+  id            String    @id @default(cuid())
+  userId        String
+  intent        String
+  duration      Int       // in minutes
+  status        String    // "completed" | "failed" | "active"
+  startTime     DateTime  @default(now())
+  endTime       DateTime?
+  aiSuggested   Boolean   @default(false)
+  aiApproach    String[]
+  aiBlockedApps String[]
+  aiTips        String[]
+  cost          Int       // in cents
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+enum UserRole {
+  USER
+  ADMIN
 }
 
 enum TransactionType {

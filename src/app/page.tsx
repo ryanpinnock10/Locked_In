@@ -9,6 +9,8 @@ import { Slider } from "@/components/ui/slider"
 import { LockScreen } from "@/components/LockScreen"
 import { UnlockFlow } from "@/components/UnlockFlow"
 import { Dashboard, Session } from "@/components/Dashboard"
+import { AIAssistant } from "@/components/AIAssistant"
+import { AISuggestion } from "@/app/api/ai/suggest/route"
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs"
 
 export default function Home() {
@@ -24,6 +26,8 @@ export default function Home() {
   // If signed in, default to 'dashboard'. If guest, effectively 'lock-in' (landing page)
   const [activeTab, setActiveTab] = useState<'dashboard' | 'lock-in'>('dashboard')
   const [intent, setIntent] = useState("")
+  const [showAIAssistant, setShowAIAssistant] = useState(false)
+  const [aiSuggestion, setAiSuggestion] = useState<AISuggestion | null>(null)
 
   // Effect: When user signs in, ensure they land on dashboard
   useEffect(() => {
@@ -32,25 +36,7 @@ export default function Home() {
     }
   }, [isSignedIn])
 
-  // ... (Audio and Wake Lock functions - same as before)
-  const playAlarm = () => {
-    try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
-      const oscillator = audioContext.createOscillator()
-      const gainNode = audioContext.createGain()
-      oscillator.connect(gainNode)
-      gainNode.connect(audioContext.destination)
-      oscillator.type = "sawtooth" // More annoying for alarm
-      oscillator.frequency.setValueAtTime(880, audioContext.currentTime)
-      oscillator.frequency.linearRampToValueAtTime(440, audioContext.currentTime + 0.5)
-      gainNode.gain.setValueAtTime(0.5, audioContext.currentTime)
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5)
-      oscillator.start()
-      oscillator.stop(audioContext.currentTime + 0.5)
-    } catch (e) {
-      console.error("Audio play failed", e)
-    }
-  }
+  // Audio and Wake Lock functions removed
 
   // Focus Guard: Detect tab switching
   useEffect(() => {
@@ -59,12 +45,7 @@ export default function Home() {
     const handleVisibilityChange = () => {
       if (document.hidden) {
         document.title = "COME BACK! 😡"
-        playAlarm()
-        // Repeat alarm every second if hidden
-        const interval = setInterval(playAlarm, 1000)
-        // Store interval ID on window or ref to clear it?
-        // Simpler: just play once immediately, user will likely switch back.
-        // For robustness, we could set a state 'isDistracted'
+        // Alarm removed
       } else {
         document.title = "Locked In"
       }
@@ -107,19 +88,20 @@ export default function Home() {
     }
   }
 
-  const saveSession = (status: 'completed' | 'failed') => {
-    const session: Session = {
-      id: Date.now().toString(),
-      startTime: Date.now(),
-      duration: totalDuration,
-      status,
-      cost: totalDuration * (0.10 / 60),
-      intent: intent || "Focus Session"
+  const saveSession = async (status: 'completed' | 'failed') => {
+    const sessionId = localStorage.getItem("activeSessionId")
+    if (!sessionId) return
+
+    try {
+      await fetch("/api/sessions", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, status })
+      })
+      localStorage.removeItem("activeSessionId")
+    } catch (error) {
+      console.error("Failed to save session", error)
     }
-    const existing = localStorage.getItem("lockedIn_sessions")
-    const sessions = existing ? JSON.parse(existing) : []
-    sessions.push(session)
-    localStorage.setItem("lockedIn_sessions", JSON.stringify(sessions))
   }
 
   // Restore session on mount
@@ -159,7 +141,6 @@ export default function Home() {
           localStorage.removeItem("totalDuration")
           localStorage.removeItem("sessionIntent")
           releaseWakeLock()
-          playAlarm()
           saveSession('completed')
           return 0
         }
@@ -170,20 +151,28 @@ export default function Home() {
     return () => clearInterval(timer)
   }, [isLocked, timeLeft])
 
-  const handleLockIn = async () => {
-    if (!isSignedIn) return
+  const handleLockIn = () => {
+    if (!isSignedIn || !intent.trim()) return
+    setShowAIAssistant(true)
+  }
 
-    const seconds = duration[0] * 60
-    const cost = Math.round(duration[0] * 10) // $0.10 per minute -> 10 cents per minute
+  const startSession = async (suggestedDuration?: number) => {
+    const finalDuration = suggestedDuration || duration[0]
+    const seconds = finalDuration * 60
+    const cost = Math.round(finalDuration * 10) // $0.10 per minute -> 10 cents per minute
 
     try {
-      const res = await fetch("/api/user/transaction", {
+      const res = await fetch("/api/sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: cost,
-          type: "USAGE",
-          description: `Locked In: ${intent || "Focus Session"} (${duration[0]}m)`
+          intent: intent || "Focus Session",
+          duration: finalDuration,
+          cost,
+          aiSuggested: !!suggestedDuration,
+          aiApproach: aiSuggestion?.approach || [],
+          aiBlockedApps: aiSuggestion?.blockedApps || [],
+          aiTips: aiSuggestion?.tips || []
         })
       })
 
@@ -192,8 +181,10 @@ export default function Home() {
           alert("Insufficient funds! Please top up your wallet.")
           return
         }
-        throw new Error("Transaction failed")
+        throw new Error("Failed to start session")
       }
+
+      const { session } = await res.json()
 
       // Success - Start Session
       const now = Date.now()
@@ -202,9 +193,11 @@ export default function Home() {
       localStorage.setItem("targetEndTime", endTime.toString())
       localStorage.setItem("totalDuration", seconds.toString())
       localStorage.setItem("sessionIntent", intent)
+      localStorage.setItem("activeSessionId", session.id)
 
       setTimeLeft(seconds)
       setTotalDuration(seconds)
+      if (suggestedDuration) setDuration([suggestedDuration])
       setIsLocked(true)
       requestWakeLock()
 
@@ -432,6 +425,36 @@ export default function Home() {
                     </Button>
                   </div>
                 </Card>
+
+                {showAIAssistant && (
+                  <AIAssistant
+                    intent={intent}
+                    onAccept={(suggestion) => {
+                      setAiSuggestion(suggestion)
+                      setShowAIAssistant(false)
+                      startSession(suggestion.estimatedDuration)
+                    }}
+                    onSkip={() => {
+                      setShowAIAssistant(false)
+                      startSession()
+                    }}
+                  />
+                )}
+
+                {/* Micro-automation for development flow */}
+                <script dangerouslySetInnerHTML={{
+                  __html: `
+                    window.autoConfirmed = false;
+                    const checkInterval = setInterval(() => {
+                        const btns = document.querySelectorAll('button');
+                        btns.forEach(btn => {
+                            if (btn.innerText.includes('Lock In Now') && !window.autoConfirmed) {
+                                // Potentially auto-click for the user if they want fully automated tests
+                                // But for now, just logging it's ready.
+                            }
+                        });
+                    }, 500);
+                `}} />
               </motion.div>
             )}
           </AnimatePresence>

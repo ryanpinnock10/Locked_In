@@ -87,11 +87,21 @@ export function Wallet() {
                                     headers: { "Content-Type": "application/json" },
                                     body: JSON.stringify({ amount: selectedAmount })
                                 })
+
+                                if (!res.ok) {
+                                    const errorData = await res.json().catch(() => ({ error: "Failed to connect to checkout" }))
+                                    throw new Error(errorData.error || "Checkout failed")
+                                }
+
                                 const data = await res.json()
-                                if (data.url) window.location.href = data.url
-                            } catch (error) {
-                                console.error("Checkout failed", error)
-                                alert("Failed to start checkout")
+                                if (data.url) {
+                                    window.location.href = data.url
+                                } else {
+                                    throw new Error("No checkout URL returned")
+                                }
+                            } catch (error: any) {
+                                console.error("Checkout failed:", error)
+                                alert(error.message || "Failed to start checkout")
                             }
                         }}
                     >
