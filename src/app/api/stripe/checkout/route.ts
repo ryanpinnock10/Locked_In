@@ -16,11 +16,10 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Unauthorized. Please sign in again." }, { status: 401 })
         }
 
-        // Validate amount (must be one of the allowed options to prevent manipulation)
-        const allowedAmounts = [500, 1000, 2000] // $5, $10, $20
-        if (!allowedAmounts.includes(amount)) {
+        // Validate amount (minimum $5.00 / 500 cents)
+        if (!amount || typeof amount !== 'number' || amount < 500) {
             console.error("[STRIPE_CHECKOUT] Invalid amount:", amount)
-            return NextResponse.json({ error: "Invalid amount selected." }, { status: 400 })
+            return NextResponse.json({ error: "Invalid amount. Minimum is $5.00." }, { status: 400 })
         }
 
         // 1. Create Checkout Session
