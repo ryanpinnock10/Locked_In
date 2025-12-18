@@ -45,26 +45,26 @@ export default async function AdminUsersPage() {
         <div className="space-y-8">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight">User Analytics</h1>
-                <p className="text-zinc-400">Manage and track user growth and activity.</p>
+                <p className="text-zinc-200">Manage and track user growth and activity.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-2">
-                    <div className="flex items-center justify-between text-zinc-400">
+                    <div className="flex items-center justify-between text-zinc-200">
                         <span className="text-sm font-medium">Total Users</span>
                         <UsersIcon className="w-4 h-4" />
                     </div>
                     <div className="text-2xl font-bold text-white">{stats.totalUsers}</div>
                 </Card>
                 <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-2">
-                    <div className="flex items-center justify-between text-zinc-400">
+                    <div className="flex items-center justify-between text-zinc-200">
                         <span className="text-sm font-medium">New Today</span>
                         <UserPlus className="w-4 h-4" />
                     </div>
                     <div className="text-2xl font-bold text-white">{stats.newUsersToday}</div>
                 </Card>
                 <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-2">
-                    <div className="flex items-center justify-between text-zinc-400">
+                    <div className="flex items-center justify-between text-zinc-200">
                         <span className="text-sm font-medium">Active Today</span>
                         <UserCheck className="w-4 h-4" />
                     </div>
@@ -79,7 +79,7 @@ export default async function AdminUsersPage() {
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="text-zinc-500 text-sm border-b border-zinc-800">
+                            <tr className="text-zinc-200 text-sm border-b border-zinc-800">
                                 <th className="p-4 font-medium">User</th>
                                 <th className="p-4 font-medium">Joined</th>
                                 <th className="p-4 font-medium">Sessions</th>
@@ -92,12 +92,12 @@ export default async function AdminUsersPage() {
                                 <tr key={user.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
                                     <td className="p-4">
                                         <div className="font-medium text-white">{user.email}</div>
-                                        <div className="text-xs text-zinc-500">{user.id}</div>
+                                        <div className="text-xs text-zinc-300">{user.id}</div>
                                     </td>
-                                    <td className="p-4 text-sm text-zinc-400">
+                                    <td className="p-4 text-sm text-zinc-200">
                                         {new Date(user.createdAt).toLocaleDateString()}
                                     </td>
-                                    <td className="p-4 text-sm">
+                                    <td className="p-4 text-sm text-zinc-200">
                                         {user._count.sessions}
                                     </td>
                                     <td className="p-4 text-sm font-mono text-green-400">

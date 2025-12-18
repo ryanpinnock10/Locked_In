@@ -31,8 +31,8 @@ export function AdminSidebar() {
                             <Button
                                 variant="ghost"
                                 className={`w-full justify-start gap-3 ${isActive
-                                        ? "bg-zinc-800 text-white"
-                                        : "text-zinc-400 hover:text-white hover:bg-zinc-900"
+                                    ? "bg-zinc-800 text-white"
+                                    : "text-zinc-100 hover:text-white hover:bg-zinc-900"
                                     }`}
                             >
                                 <Icon className="w-4 h-4" />
@@ -45,12 +45,12 @@ export function AdminSidebar() {
 
             <div className="pt-6 border-t border-zinc-800">
                 <Link href="/">
-                    <Button variant="ghost" className="w-full justify-start gap-3 text-zinc-400 hover:text-white">
+                    <Button variant="ghost" className="w-full justify-start gap-3 text-zinc-100 hover:text-white">
                         <LogOut className="w-4 h-4" />
                         Back to App
                     </Button>
                 </Link>
             </div>
-        </aside>
+        </aside >
     )
 }

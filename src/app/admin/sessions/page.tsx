@@ -39,34 +39,34 @@ export default async function AdminSessionsPage() {
         <div className="space-y-8">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight">Session Analytics</h1>
-                <p className="text-zinc-400">Track focus session performance and AI assistant impact.</p>
+                <p className="text-zinc-200">Track focus session performance and AI assistant impact.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-2">
-                    <div className="flex items-center justify-between text-zinc-400">
+                    <div className="flex items-center justify-between text-zinc-200">
                         <span className="text-sm font-medium">Total Sessions</span>
                         <Clock className="w-4 h-4" />
                     </div>
                     <div className="text-2xl font-bold text-white">{stats.totalSessions}</div>
                 </Card>
                 <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-2">
-                    <div className="flex items-center justify-between text-zinc-400">
+                    <div className="flex items-center justify-between text-zinc-200">
                         <span className="text-sm font-medium">Completion Rate</span>
                         <Zap className="w-4 h-4 text-yellow-400" />
                     </div>
                     <div className="text-2xl font-bold text-white">{stats.completionRate.toFixed(1)}%</div>
                 </Card>
                 <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-2">
-                    <div className="flex items-center justify-between text-zinc-400">
+                    <div className="flex items-center justify-between text-zinc-200">
                         <span className="text-sm font-medium">AI Assisted</span>
                         <Sparkles className="w-4 h-4 text-blue-400" />
                     </div>
                     <div className="text-2xl font-bold text-white">{stats.aiSessions}</div>
-                    <div className="text-xs text-zinc-500">{stats.aiAdoptionRate.toFixed(1)}% adoption</div>
+                    <div className="text-xs text-zinc-300">{stats.aiAdoptionRate.toFixed(1)}% adoption</div>
                 </Card>
                 <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-2">
-                    <div className="flex items-center justify-between text-zinc-400">
+                    <div className="flex items-center justify-between text-zinc-200">
                         <span className="text-sm font-medium">Failed Sessions</span>
                         <XCircle className="w-4 h-4 text-red-400" />
                     </div>
@@ -81,7 +81,7 @@ export default async function AdminSessionsPage() {
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="text-zinc-500 text-sm border-b border-zinc-800">
+                            <tr className="text-zinc-200 text-sm border-b border-zinc-800">
                                 <th className="p-4 font-medium">User</th>
                                 <th className="p-4 font-medium">Intent</th>
                                 <th className="p-4 font-medium">Duration</th>
@@ -111,17 +111,17 @@ export default async function AdminSessionsPage() {
                                             ) : (
                                                 <Clock className="w-4 h-4 text-blue-500" />
                                             )}
-                                            <span className="capitalize">{session.status}</span>
+                                            <span className="capitalize text-zinc-100">{session.status}</span>
                                         </div>
                                     </td>
                                     <td className="p-4 text-sm">
                                         {session.aiSuggested ? (
                                             <Sparkles className="w-4 h-4 text-blue-400" />
                                         ) : (
-                                            <span className="text-zinc-600">-</span>
+                                            <span className="text-zinc-400">-</span>
                                         )}
                                     </td>
-                                    <td className="p-4 text-sm text-zinc-400">
+                                    <td className="p-4 text-sm text-zinc-200">
                                         {new Date(session.startTime).toLocaleString()}
                                     </td>
                                 </tr>

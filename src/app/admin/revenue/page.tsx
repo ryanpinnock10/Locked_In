@@ -40,26 +40,26 @@ export default async function AdminRevenuePage() {
         <div className="space-y-8">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight">Revenue Analytics</h1>
-                <p className="text-zinc-400">Monitor financial performance and transaction history.</p>
+                <p className="text-zinc-200">Monitor financial performance and transaction history.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-2">
-                    <div className="flex items-center justify-between text-zinc-400">
+                    <div className="flex items-center justify-between text-zinc-200">
                         <span className="text-sm font-medium">Total Revenue (Deposits)</span>
                         <DollarSign className="w-4 h-4 text-green-400" />
                     </div>
                     <div className="text-2xl font-bold text-white">${stats.totalRevenue.toFixed(2)}</div>
                 </Card>
                 <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-2">
-                    <div className="flex items-center justify-between text-zinc-400">
+                    <div className="flex items-center justify-between text-zinc-200">
                         <span className="text-sm font-medium">Total Usage (Revenue Recognized)</span>
                         <TrendingUp className="w-4 h-4 text-blue-400" />
                     </div>
                     <div className="text-2xl font-bold text-white">${stats.totalUsage.toFixed(2)}</div>
                 </Card>
                 <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-2">
-                    <div className="flex items-center justify-between text-zinc-400">
+                    <div className="flex items-center justify-between text-zinc-200">
                         <span className="text-sm font-medium">Liability (User Balances)</span>
                         <CreditCard className="w-4 h-4 text-orange-400" />
                     </div>
@@ -74,7 +74,7 @@ export default async function AdminRevenuePage() {
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="text-zinc-500 text-sm border-b border-zinc-800">
+                            <tr className="text-zinc-200 text-sm border-b border-zinc-800">
                                 <th className="p-4 font-medium">User</th>
                                 <th className="p-4 font-medium">Type</th>
                                 <th className="p-4 font-medium">Amount</th>
@@ -98,10 +98,10 @@ export default async function AdminRevenuePage() {
                                     <td className={`p-4 text-sm font-mono font-bold ${tx.amount > 0 ? 'text-green-400' : 'text-red-400'}`}>
                                         {tx.amount > 0 ? '+' : ''}${(tx.amount / 100).toFixed(2)}
                                     </td>
-                                    <td className="p-4 text-sm text-zinc-400">
+                                    <td className="p-4 text-sm text-zinc-200">
                                         {tx.description}
                                     </td>
-                                    <td className="p-4 text-sm text-zinc-400">
+                                    <td className="p-4 text-sm text-zinc-200">
                                         {new Date(tx.createdAt).toLocaleString()}
                                     </td>
                                 </tr>
@@ -122,9 +122,9 @@ export default async function AdminRevenuePage() {
                             { name: "Hosting (Vercel)", cost: "$0.00", note: "Hobby Plan" }
                         ].map((service) => (
                             <div key={service.name} className="flex justify-between items-center text-sm border-b border-zinc-800 pb-2 last:border-0 last:pb-0">
-                                <div className="space-y-0.5">
+                                <div className="space-y-0.5 text-zinc-100">
                                     <div className="text-zinc-200 font-medium">{service.name}</div>
-                                    <div className="text-zinc-500 text-xs">{service.note}</div>
+                                    <div className="text-zinc-300 text-xs">{service.note}</div>
                                 </div>
                                 <div className="text-red-400 font-mono font-bold">{service.cost}</div>
                             </div>

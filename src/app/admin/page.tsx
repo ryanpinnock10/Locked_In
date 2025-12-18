@@ -46,7 +46,7 @@ export default async function AdminOverview() {
         <div className="space-y-8">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
-                <p className="text-zinc-400">Real-time performance metrics for Locked In.</p>
+                <p className="text-zinc-200">Real-time performance metrics for Locked In.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -55,7 +55,7 @@ export default async function AdminOverview() {
                     return (
                         <Card key={card.name} className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-4">
                             <div className="flex items-center justify-between">
-                                <span className="text-zinc-400 text-sm font-medium">{card.name}</span>
+                                <span className="text-zinc-200 text-sm font-medium">{card.name}</span>
                                 <Icon className={`w-5 h-5 ${card.color}`} />
                             </div>
                             <div className="text-2xl font-bold text-white">{card.value}</div>
@@ -66,10 +66,10 @@ export default async function AdminOverview() {
 
             {/* Placeholder for Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card className="bg-zinc-900 border-zinc-800 p-6 h-80 flex items-center justify-center text-zinc-500">
+                <Card className="bg-zinc-900 border-zinc-800 p-6 h-80 flex items-center justify-center text-zinc-300">
                     User Growth Chart (Coming Soon)
                 </Card>
-                <Card className="bg-zinc-900 border-zinc-800 p-6 h-80 flex items-center justify-center text-zinc-500">
+                <Card className="bg-zinc-900 border-zinc-800 p-6 h-80 flex items-center justify-center text-zinc-300">
                     Revenue Chart (Coming Soon)
                 </Card>
             </div>
