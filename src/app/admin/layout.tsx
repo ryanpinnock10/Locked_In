@@ -3,9 +3,7 @@ import { auth, currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 import { AdminSidebar } from "@/components/admin/AdminSidebar"
 
-const ADMIN_EMAILS = [
-    "ryanpinnock10@gmail.com", // Add your email here
-]
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "").split(",")
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
     const { userId } = await auth()
