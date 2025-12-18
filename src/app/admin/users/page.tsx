@@ -54,21 +54,21 @@ export default async function AdminUsersPage() {
                         <span className="text-sm font-medium">Total Users</span>
                         <UsersIcon className="w-4 h-4" />
                     </div>
-                    <div className="text-2xl font-bold">{stats.totalUsers}</div>
+                    <div className="text-2xl font-bold text-white">{stats.totalUsers}</div>
                 </Card>
                 <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-2">
                     <div className="flex items-center justify-between text-zinc-400">
                         <span className="text-sm font-medium">New Today</span>
                         <UserPlus className="w-4 h-4" />
                     </div>
-                    <div className="text-2xl font-bold">{stats.newUsersToday}</div>
+                    <div className="text-2xl font-bold text-white">{stats.newUsersToday}</div>
                 </Card>
                 <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-2">
                     <div className="flex items-center justify-between text-zinc-400">
                         <span className="text-sm font-medium">Active Today</span>
                         <UserCheck className="w-4 h-4" />
                     </div>
-                    <div className="text-2xl font-bold">{stats.activeUsersToday}</div>
+                    <div className="text-2xl font-bold text-white">{stats.activeUsersToday}</div>
                 </Card>
             </div>
 
@@ -91,7 +91,7 @@ export default async function AdminUsersPage() {
                             {stats.recentUsers.map((user) => (
                                 <tr key={user.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
                                     <td className="p-4">
-                                        <div className="font-medium">{user.email}</div>
+                                        <div className="font-medium text-white">{user.email}</div>
                                         <div className="text-xs text-zinc-500">{user.id}</div>
                                     </td>
                                     <td className="p-4 text-sm text-zinc-400">

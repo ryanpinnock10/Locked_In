@@ -48,21 +48,21 @@ export default async function AdminSessionsPage() {
                         <span className="text-sm font-medium">Total Sessions</span>
                         <Clock className="w-4 h-4" />
                     </div>
-                    <div className="text-2xl font-bold">{stats.totalSessions}</div>
+                    <div className="text-2xl font-bold text-white">{stats.totalSessions}</div>
                 </Card>
                 <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-2">
                     <div className="flex items-center justify-between text-zinc-400">
                         <span className="text-sm font-medium">Completion Rate</span>
                         <Zap className="w-4 h-4 text-yellow-400" />
                     </div>
-                    <div className="text-2xl font-bold">{stats.completionRate.toFixed(1)}%</div>
+                    <div className="text-2xl font-bold text-white">{stats.completionRate.toFixed(1)}%</div>
                 </Card>
                 <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-2">
                     <div className="flex items-center justify-between text-zinc-400">
                         <span className="text-sm font-medium">AI Assisted</span>
                         <Sparkles className="w-4 h-4 text-blue-400" />
                     </div>
-                    <div className="text-2xl font-bold">{stats.aiSessions}</div>
+                    <div className="text-2xl font-bold text-white">{stats.aiSessions}</div>
                     <div className="text-xs text-zinc-500">{stats.aiAdoptionRate.toFixed(1)}% adoption</div>
                 </Card>
                 <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-2">
@@ -70,7 +70,7 @@ export default async function AdminSessionsPage() {
                         <span className="text-sm font-medium">Failed Sessions</span>
                         <XCircle className="w-4 h-4 text-red-400" />
                     </div>
-                    <div className="text-2xl font-bold">{stats.failedSessions}</div>
+                    <div className="text-2xl font-bold text-white">{stats.failedSessions}</div>
                 </Card>
             </div>
 
