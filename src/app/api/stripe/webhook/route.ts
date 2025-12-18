@@ -44,7 +44,7 @@ export async function POST(req: Request) {
                     userId: userId,
                     amount: credits,
                     type: "PURCHASE",
-                    description: "Wallet Top Up ($5.00)"
+                    description: `Wallet Top Up ($${(credits / 100).toFixed(2)})`
                 }
             })
         })
