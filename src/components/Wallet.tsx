@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { Plus, Wallet as WalletIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -9,10 +10,21 @@ import { Card } from "@/components/ui/card"
 export function Wallet() {
     const [balance, setBalance] = useState<number | null>(null)
     const [loading, setLoading] = useState(true)
+    const searchParams = useSearchParams()
+    const success = searchParams.get("success")
 
     useEffect(() => {
         fetchBalance()
-    }, [])
+
+        // If we just came back from a successful checkout, 
+        // fetch again after a short delay to account for webhook latency
+        if (success === "true") {
+            const timer = setTimeout(() => {
+                fetchBalance()
+            }, 2000)
+            return () => clearTimeout(timer)
+        }
+    }, [success])
 
     const fetchBalance = async () => {
         try {
