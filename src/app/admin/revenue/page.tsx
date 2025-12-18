@@ -86,7 +86,7 @@ export default async function AdminRevenuePage() {
                             {stats.recentTransactions.map((tx) => (
                                 <tr key={tx.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
                                     <td className="p-4">
-                                        <div className="text-sm font-medium">{tx.user.email}</div>
+                                        <div className="text-sm font-medium text-white">{tx.user.email}</div>
                                     </td>
                                     <td className="p-4 text-sm">
                                         <span className={`px-2 py-1 rounded-full text-xs ${tx.type === 'PURCHASE' ? 'bg-green-600/20 text-green-400' :

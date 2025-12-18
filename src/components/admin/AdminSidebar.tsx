@@ -12,11 +12,11 @@ const navItems = [
     { name: "Revenue", href: "/admin/revenue", icon: DollarSign },
 ]
 
-export function AdminSidebar() {
+export function AdminSidebar({ className }: { className?: string }) {
     const pathname = usePathname()
 
     return (
-        <aside className="w-64 border-r border-zinc-800 flex flex-col gap-8 p-6">
+        <aside className={`w-64 border-r border-zinc-800 flex flex-col gap-8 p-6 bg-black h-full ${className}`}>
             <div className="flex items-center gap-2 px-2">
                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold">L</div>
                 <span className="font-bold text-xl tracking-tighter">Admin Panel</span>
