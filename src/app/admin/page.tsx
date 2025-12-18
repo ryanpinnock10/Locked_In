@@ -58,7 +58,7 @@ export default async function AdminOverview() {
                                 <span className="text-zinc-400 text-sm font-medium">{card.name}</span>
                                 <Icon className={`w-5 h-5 ${card.color}`} />
                             </div>
-                            <div className="text-2xl font-bold">{card.value}</div>
+                            <div className="text-2xl font-bold text-white">{card.value}</div>
                         </Card>
                     )
                 })}

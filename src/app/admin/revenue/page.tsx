@@ -49,21 +49,21 @@ export default async function AdminRevenuePage() {
                         <span className="text-sm font-medium">Total Revenue (Deposits)</span>
                         <DollarSign className="w-4 h-4 text-green-400" />
                     </div>
-                    <div className="text-2xl font-bold">${stats.totalRevenue.toFixed(2)}</div>
+                    <div className="text-2xl font-bold text-white">${stats.totalRevenue.toFixed(2)}</div>
                 </Card>
                 <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-2">
                     <div className="flex items-center justify-between text-zinc-400">
                         <span className="text-sm font-medium">Total Usage (Revenue Recognized)</span>
                         <TrendingUp className="w-4 h-4 text-blue-400" />
                     </div>
-                    <div className="text-2xl font-bold">${stats.totalUsage.toFixed(2)}</div>
+                    <div className="text-2xl font-bold text-white">${stats.totalUsage.toFixed(2)}</div>
                 </Card>
                 <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-2">
                     <div className="flex items-center justify-between text-zinc-400">
                         <span className="text-sm font-medium">Liability (User Balances)</span>
                         <CreditCard className="w-4 h-4 text-orange-400" />
                     </div>
-                    <div className="text-2xl font-bold">${stats.totalBalance.toFixed(2)}</div>
+                    <div className="text-2xl font-bold text-white">${stats.totalBalance.toFixed(2)}</div>
                 </Card>
             </div>
 
