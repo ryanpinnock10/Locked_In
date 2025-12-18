@@ -10,11 +10,12 @@ import { Wallet } from "@/components/Wallet"
 
 export interface Session {
     id: string
-    startTime: number
-    duration: number // in seconds
-    status: 'completed' | 'failed'
-    cost: number
-    intent?: string
+    startTime: string | number
+    duration: number // in minutes
+    status: 'completed' | 'failed' | 'active'
+    cost: number // in cents
+    intent: string
+    aiSuggested?: boolean
 }
 
 interface DashboardProps {
@@ -27,46 +28,62 @@ type TimePeriod = '1d' | '7d' | '30d' | '90d' | 'all'
 export function Dashboard({ onBack, onLockIn }: DashboardProps) {
     const [sessions, setSessions] = useState<Session[]>([])
     const [timePeriod, setTimePeriod] = useState<TimePeriod>('all')
+    const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        const stored = localStorage.getItem("lockedIn_sessions")
-        if (stored) {
-            setSessions(JSON.parse(stored).reverse()) // Newest first
+        const fetchSessions = async () => {
+            try {
+                const res = await fetch("/api/sessions/history")
+                if (res.ok) {
+                    const data = await res.json()
+                    setSessions(data)
+                }
+            } catch (error) {
+                console.error("Failed to fetch sessions", error)
+            } finally {
+                setLoading(false)
+            }
         }
+        fetchSessions()
     }, [])
 
     // Filter sessions based on time period
     const getFilteredSessions = () => {
-        if (timePeriod === 'all') return sessions
+        const now = new Date()
+        return sessions.filter(session => {
+            const sessionDate = new Date(session.startTime)
+            if (timePeriod === 'all') return true
 
-        const now = Date.now()
-        const periodMs: Record<Exclude<TimePeriod, 'all'>, number> = {
-            '1d': 24 * 60 * 60 * 1000,
-            '7d': 7 * 24 * 60 * 60 * 1000,
-            '30d': 30 * 24 * 60 * 60 * 1000,
-            '90d': 90 * 24 * 60 * 60 * 1000,
-        }
+            const diffDays = (now.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24)
 
-        const cutoff = now - periodMs[timePeriod as Exclude<TimePeriod, 'all'>]
-        return sessions.filter(s => s.startTime >= cutoff)
+            if (timePeriod === '1d') return diffDays <= 1
+            if (timePeriod === '7d') return diffDays <= 7
+            if (timePeriod === '30d') return diffDays <= 30
+            if (timePeriod === '90d') return diffDays <= 90
+            return true
+        })
     }
 
     const filteredSessions = getFilteredSessions()
 
     const totalTime = filteredSessions.reduce((acc, s) => s.status === 'completed' ? acc + s.duration : acc, 0)
-    const totalCost = filteredSessions.reduce((acc, s) => acc + s.cost, 0)
+    const totalCost = filteredSessions.reduce((acc, s) => acc + (s.cost / 100), 0)
     const completedSessions = filteredSessions.filter(s => s.status === 'completed').length
 
-    const formatDuration = (seconds: number) => {
-        const h = Math.floor(seconds / 3600)
-        const m = Math.floor((seconds % 3600) / 60)
-        if (h > 0) return `${h}h ${m}m`
-        return `${m}m`
+    const formatDuration = (mins: number) => {
+        if (mins < 60) return `${mins}m`
+        const h = Math.floor(mins / 60)
+        const m = mins % 60
+        return m > 0 ? `${h}h ${m}m` : `${h}h`
     }
 
-    const formatDate = (timestamp: number) => {
-        return new Date(timestamp).toLocaleDateString(undefined, {
-            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    const formatDate = (dateInput: string | number) => {
+        const date = new Date(dateInput)
+        return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
         })
     }
 
@@ -150,7 +167,11 @@ export function Dashboard({ onBack, onLockIn }: DashboardProps) {
                 <div className="space-y-4">
                     <h2 className="text-xl font-semibold text-zinc-300">Recent Sessions</h2>
 
-                    {filteredSessions.length === 0 ? (
+                    {loading ? (
+                        <div className="flex items-center justify-center py-12">
+                            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                    ) : filteredSessions.length === 0 ? (
                         <div className="text-center text-zinc-500 py-8 border border-zinc-800 rounded-md bg-zinc-900/20">
                             {timePeriod === 'all'
                                 ? 'No sessions yet. Lock in to start!'
@@ -181,7 +202,7 @@ export function Dashboard({ onBack, onLockIn }: DashboardProps) {
                                     </div>
                                     <div className="text-right">
                                         <div className={`font-mono font-bold ${session.status === 'completed' ? 'text-green-400' : 'text-red-400'}`}>
-                                            {session.status === 'completed' ? '+$' : '-$'}{session.cost.toFixed(2)}
+                                            {session.status === 'completed' ? '+$' : '-$'}{(session.cost / 100).toFixed(2)}
                                         </div>
                                         <div className="text-xs text-zinc-500 uppercase">
                                             {session.status}

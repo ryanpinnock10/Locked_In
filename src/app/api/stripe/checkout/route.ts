@@ -12,13 +12,15 @@ export async function POST(req: Request) {
         const { amount } = await req.json()
 
         if (!userId || !user) {
-            return new NextResponse("Unauthorized", { status: 401 })
+            console.error("[STRIPE_CHECKOUT] Unauthorized: Missing userId or user")
+            return NextResponse.json({ error: "Unauthorized. Please sign in again." }, { status: 401 })
         }
 
         // Validate amount (must be one of the allowed options to prevent manipulation)
         const allowedAmounts = [500, 1000, 2000] // $5, $10, $20
         if (!allowedAmounts.includes(amount)) {
-            return new NextResponse("Invalid amount", { status: 400 })
+            console.error("[STRIPE_CHECKOUT] Invalid amount:", amount)
+            return NextResponse.json({ error: "Invalid amount selected." }, { status: 400 })
         }
 
         // 1. Create Checkout Session
@@ -47,8 +49,8 @@ export async function POST(req: Request) {
         })
 
         return NextResponse.json({ url: session.url })
-    } catch (error) {
-        console.error("[STRIPE_CHECKOUT]", error)
-        return new NextResponse("Internal Error", { status: 500 })
+    } catch (error: any) {
+        console.error("[STRIPE_CHECKOUT] Error:", error)
+        return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 })
     }
 }
