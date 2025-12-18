@@ -90,7 +90,7 @@ export default async function AdminRevenuePage() {
                                     </td>
                                     <td className="p-4 text-sm">
                                         <span className={`px-2 py-1 rounded-full text-xs ${tx.type === 'PURCHASE' ? 'bg-green-600/20 text-green-400' :
-                                                tx.type === 'USAGE' ? 'bg-blue-600/20 text-blue-400' : 'bg-zinc-800 text-zinc-400'
+                                            tx.type === 'USAGE' ? 'bg-blue-600/20 text-blue-400' : 'bg-zinc-800 text-zinc-400'
                                             }`}>
                                             {tx.type}
                                         </span>
@@ -110,6 +110,38 @@ export default async function AdminRevenuePage() {
                     </table>
                 </div>
             </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card className="bg-zinc-900 border-zinc-800 p-6">
+                    <h2 className="text-xl font-semibold mb-4">Estimated Operating Costs</h2>
+                    <div className="space-y-4">
+                        {[
+                            { name: "Payments (Stripe)", cost: `$${(stats.totalRevenue * 0.029 + stats.recentTransactions.filter(t => t.type === 'PURCHASE').length * 0.30).toFixed(2)}`, note: "2.9% + $0.30 per tx" },
+                            { name: "Auth (Clerk)", cost: "$0.00", note: "Free < 10k MAU" },
+                            { name: "Database (Supabase)", cost: "$0.00", note: "Free tier" },
+                            { name: "AI (OpenAI)", cost: `$${(stats.totalUsage * 0.05).toFixed(2)}`, note: "Est. based on usage" },
+                            { name: "Hosting (Vercel)", cost: "$0.00", note: "Hobby Plan" }
+                        ].map((service) => (
+                            <div key={service.name} className="flex justify-between items-center text-sm border-b border-zinc-800 pb-2 last:border-0 last:pb-0">
+                                <div className="space-y-0.5">
+                                    <div className="text-zinc-200 font-medium">{service.name}</div>
+                                    <div className="text-zinc-500 text-xs">{service.note}</div>
+                                </div>
+                                <div className="text-red-400 font-mono font-bold">{service.cost}</div>
+                            </div>
+                        ))}
+                    </div>
+                </Card>
+
+                <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col items-center justify-center text-center gap-4">
+                    <TrendingUp className="w-12 h-12 text-blue-400 opacity-20" />
+                    <div className="space-y-1">
+                        <div className="text-lg font-semibold text-zinc-200">Net Profit Estimate</div>
+                        <div className="text-4xl font-bold text-green-400">
+                            ${(stats.totalUsage - (stats.totalRevenue * 0.029 + stats.recentTransactions.filter(t => t.type === 'PURCHASE').length * 0.30 + stats.totalUsage * 0.05)).toFixed(2)}
+                        </div>
+                    </div>
+                </Card>
+            </div>
         </div>
     )
 }
