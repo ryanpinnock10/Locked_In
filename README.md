@@ -1,56 +1,44 @@
-# Locked In 🔒
+# Locked In
 
-**"Pay to Focus"** - A high-stakes productivity app that forces you to lock in on your goals.
+## Getting Started
 
-## 🚀 The Concept
-Locked In is a productivity tool with a twist: **It costs money to focus.**
-- **Lock In**: Commit to a session (e.g., 30 mins).
-- **Pay Up**: Each session costs real money (e.g., $0.50).
-- **Stay Focused**: If you leave the tab, an alarm sounds and you are shamed.
-- **No Refunds**: Once you lock in, the money is committed.
+### 1. Environment Setup
+The application is configured to run on port **3004** to match the Stripe webhook configuration.
 
-## ✨ Features
-- **High-Stakes Timer**: A visual countdown that represents your financial commitment.
-- **Focus Guard**: Detects tab switching and plays an annoying alarm to force you back.
-- **Session Intent**: Declare your goal before every session.
-- **Wallet System**: Top up your balance and spend credits on focus sessions.
-- **PWA Support**: Installable on mobile and desktop for an app-like experience.
-- **Dark Mode**: Premium, distraction-free UI.
+### 2. Run the Development Server
+You must explicitly specify the port when starting the server:
 
-## 🛠️ Tech Stack
-- **Framework**: Next.js 15 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS + Framer Motion
-- **Auth**: Clerk
-- **Database**: Supabase (PostgreSQL)
-- **ORM**: Prisma
-- **Payments**: Stripe (In Progress)
+```bash
+npm run dev -- -p 3004
+```
 
-## 📦 Getting Started
+- App will be running at [http://localhost:3004](http://localhost:3004)
 
-1.  **Clone the repo**
+### 3. Stripe Webhook Setup (Required for Wallet)
+To test wallet deposits locally, you need to forward Stripe events to your local server.
+
+1.  **Install Stripe CLI** (if not already installed).
+2.  **Start Listener**:
+    Open a *separate* terminal window and run:
     ```bash
-    git clone https://github.com/your-username/locked-in.git
-    cd locked-in
+    stripe listen --forward-to localhost:3004/api/stripe/webhook
     ```
+3.  **Update Secret**:
+    The command above will output a secret starting with `whsec_`.
+    - Copy this secret.
+    - Paste it into your `.env.local` file as `STRIPE_WEBHOOK_SECRET`.
+    - **Restart** your Next.js server if you changed the .env file.
 
-2.  **Install dependencies**
-    ```bash
-    npm install
-    ```
+### 4. Database Management
+To view or manage the local database:
 
-3.  **Environment Setup**
-    Create a `.env.local` file with:
-    ```env
-    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=...
-    CLERK_SECRET_KEY=...
-    DATABASE_URL=...
-    ```
+```bash
+npx prisma studio
+```
 
-4.  **Run the app**
-    ```bash
-    npm run dev
-    ```
+## Troubleshooting
 
-## 📱 Mobile
-This app is optimized as a PWA. Open it in Safari (iOS) or Chrome (Android) and "Add to Home Screen" for the best experience.
+- **Balance not updating?**
+  - Ensure `npm run dev` is strictly using `-p 3004`.
+  - Ensure `stripe listen` is running and pointing to `localhost:3004`.
+  - Check that the `STRIPE_WEBHOOK_SECRET` in `.env.local` matches the one shown in your `stripe listen` terminal.

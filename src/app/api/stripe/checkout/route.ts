@@ -16,10 +16,11 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Unauthorized. Please sign in again." }, { status: 401 })
         }
 
-        // Validate amount (minimum $5.00 / 500 cents)
-        if (!amount || typeof amount !== 'number' || amount < 500) {
+        // Validate amount (minimum $1.00 / 100 cents)
+        const amountCents = Math.round(Number(amount))
+        if (!amountCents || typeof amountCents !== 'number' || amountCents < 100) {
             console.error("[STRIPE_CHECKOUT] Invalid amount:", amount)
-            return NextResponse.json({ error: "Invalid amount. Minimum is $5.00." }, { status: 400 })
+            return NextResponse.json({ error: "Invalid amount. Minimum is $1.00." }, { status: 400 })
         }
 
         // 1. Create Checkout Session
@@ -30,10 +31,10 @@ export async function POST(req: Request) {
                     price_data: {
                         currency: "usd",
                         product_data: {
-                            name: `${amount / 100} Focus Credits`,
-                            description: `Load $${amount / 100}.00 into your wallet`,
+                            name: `${amountCents / 100} Focus Credits`,
+                            description: `Load $${(amountCents / 100).toFixed(2)} into your wallet`,
                         },
-                        unit_amount: amount,
+                        unit_amount: amountCents,
                     },
                     quantity: 1,
                 },
@@ -43,7 +44,7 @@ export async function POST(req: Request) {
             cancel_url: `${settingsUrl}/?canceled=true`,
             metadata: {
                 userId: userId, // Pass Clerk User ID to webhook
-                credits: amount.toString()
+                credits: amountCents.toString()
             }
         })
 

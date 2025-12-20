@@ -10,39 +10,60 @@ export async function POST(req: NextRequest) {
         }
 
         const { intent, duration, cost, aiSuggested, aiApproach, aiBlockedApps, aiTips } = await req.json()
+        console.log(`[SESSIONS_POST] Request from ${userId}: cost=${cost}, balance check starting...`)
 
-        // 1. Create Transaction
-        const transaction = await prisma.transaction.create({
-            data: {
-                userId,
-                amount: -cost,
-                type: "USAGE",
-                description: `Locked In: ${intent || "Focus Session"} (${duration}m)`
+        // 1. Perform balance check and updates in a transaction
+        const result = await prisma.$transaction(async (tx) => {
+            const user = await tx.user.findUnique({
+                where: { id: userId },
+                select: { balance: true }
+            })
+
+            console.log(`[SESSIONS_POST] User balance: ${user?.balance}, Required: ${cost}`)
+            if (!user || user.balance < cost) {
+                console.log(`[SESSIONS_POST] Insufficient funds for ${userId}`)
+                return { error: "Insufficient funds", status: 402 }
             }
+
+            // Create Transaction record
+            const transaction = await tx.transaction.create({
+                data: {
+                    userId,
+                    amount: -cost,
+                    type: "USAGE",
+                    description: `Locked In: ${intent || "Focus Session"} (${duration}m)`
+                }
+            })
+
+            // Create Session
+            const session = await tx.session.create({
+                data: {
+                    userId,
+                    intent: intent || "Focus Session",
+                    duration,
+                    cost,
+                    status: "active",
+                    aiSuggested: !!aiSuggested,
+                    aiApproach: aiApproach || [],
+                    aiBlockedApps: aiBlockedApps || [],
+                    aiTips: aiTips || [],
+                }
+            })
+
+            // Update User Balance
+            await tx.user.update({
+                where: { id: userId },
+                data: { balance: { decrement: cost } }
+            })
+
+            return { session, transaction, status: 200 }
         })
 
-        // 2. Create Session
-        const session = await prisma.session.create({
-            data: {
-                userId,
-                intent: intent || "Focus Session",
-                duration,
-                cost,
-                status: "active",
-                aiSuggested: !!aiSuggested,
-                aiApproach: aiApproach || [],
-                aiBlockedApps: aiBlockedApps || [],
-                aiTips: aiTips || [],
-            }
-        })
+        if (result.status === 402) {
+            return NextResponse.json({ error: result.error }, { status: 402 })
+        }
 
-        // 3. Update User Balance
-        await prisma.user.update({
-            where: { id: userId },
-            data: { balance: { decrement: cost } }
-        })
-
-        return NextResponse.json({ session, transaction })
+        return NextResponse.json({ session: result.session, transaction: result.transaction })
     } catch (error) {
         console.error("[SESSIONS_POST] Error:", error)
         return NextResponse.json(
