@@ -22,32 +22,48 @@ export async function POST(req: Request) {
 
     const session = event.data.object as Stripe.Checkout.Session
 
+    console.log(`[STRIPE_WEBHOOK] Received event: ${event.type}`)
+
     if (event.type === "checkout.session.completed") {
         const userId = session.metadata?.userId
         const credits = parseInt(session.metadata?.credits || "0")
 
+        console.log(`[STRIPE_WEBHOOK] Processing completed session for user: ${userId}, credits: ${credits}`)
+
         if (!userId || !credits) {
+            console.error("[STRIPE_WEBHOOK] Missing metadata:", session.metadata)
             return new NextResponse("Webhook Error: Missing metadata", { status: 400 })
         }
 
-        // Update User Balance
-        await prisma.$transaction(async (tx) => {
-            // 1. Add funds
-            await tx.user.update({
-                where: { id: userId },
-                data: { balance: { increment: credits } }
-            })
+        try {
+            // Update User Balance
+            await prisma.$transaction(async (tx) => {
+                console.log(`[STRIPE_WEBHOOK] Incrementing balance for ${userId} by ${credits}`)
 
-            // 2. Record Transaction
-            await tx.transaction.create({
-                data: {
-                    userId: userId,
-                    amount: credits,
-                    type: "PURCHASE",
-                    description: `Wallet Top Up ($${(credits / 100).toFixed(2)})`
-                }
+                // 1. Add funds
+                const updatedUser = await tx.user.update({
+                    where: { id: userId },
+                    data: { balance: { increment: credits } }
+                })
+
+                console.log(`[STRIPE_WEBHOOK] New balance for ${userId}: ${updatedUser.balance}`)
+
+                // 2. Record Transaction
+                await tx.transaction.create({
+                    data: {
+                        userId: userId,
+                        amount: credits,
+                        type: "PURCHASE",
+                        description: `Wallet Top Up ($${(credits / 100).toFixed(2)})`
+                    }
+                })
+
+                console.log(`[STRIPE_WEBHOOK] Transaction record created successfully`)
             })
-        })
+        } catch (dbError) {
+            console.error("[STRIPE_WEBHOOK] Database update failed:", dbError)
+            return new NextResponse("Database Error", { status: 500 })
+        }
     }
 
     return new NextResponse(null, { status: 200 })
