@@ -28,7 +28,7 @@ export default function Home() {
 
   // Tab state: 'dashboard' | 'lock-in'
   // If signed in, default to 'dashboard'. If guest, effectively 'lock-in' (landing page)
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'lock-in'>('dashboard')
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'lock-in'>('lock-in')
   const [intent, setIntent] = useState("")
   const [showAIAssistant, setShowAIAssistant] = useState(false)
   const [aiSuggestion, setAiSuggestion] = useState<AISuggestion | null>(null)
@@ -719,7 +719,33 @@ export default function Home() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
               >
-                <Dashboard onLockIn={() => setActiveTab('lock-in')} />
+                {!isSignedIn ? (
+                  <div className="flex flex-col items-center justify-center pt-20">
+                    <Card className="w-full max-w-md bg-zinc-900/50 border-zinc-800 backdrop-blur-xl p-8 text-center space-y-6 shadow-2xl">
+                      <div className="mx-auto w-16 h-16 bg-zinc-800/50 rounded-full flex items-center justify-center">
+                        <ShieldCheck className="w-8 h-8 text-zinc-500" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-white mb-2">Track Your Progress</h2>
+                        <p className="text-zinc-400">
+                          Dashboards are for members only. Sign up to verify your sessions, track history, and rank on the leaderboard.
+                        </p>
+                      </div>
+                      <div className="flex gap-4 justify-center">
+                        <SignUpButton mode="modal">
+                          <Button size="lg" className="bg-white text-black hover:bg-zinc-200">
+                            Create Account
+                          </Button>
+                        </SignUpButton>
+                        <Button variant="outline" onClick={() => setActiveTab('lock-in')}>
+                          Go Back
+                        </Button>
+                      </div>
+                    </Card>
+                  </div>
+                ) : (
+                  <Dashboard onLockIn={() => setActiveTab('lock-in')} />
+                )}
               </motion.div>
             ) : (
               <motion.div
@@ -851,7 +877,7 @@ export default function Home() {
             )}
           </AnimatePresence>
         </div>
-      </main>
+      </main >
     )
   }
 
