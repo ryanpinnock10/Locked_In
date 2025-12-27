@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Lock, Clock, ShieldCheck, LayoutDashboard } from "lucide-react"
+import { Lock, Clock, ShieldCheck, LayoutDashboard, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
@@ -43,6 +43,7 @@ export default function Home() {
 
   // Flexible Mode State: 'strict' ($0.10/min, blocks tabs) vs 'flexible' ($0.30/min, allows tabs)
   const [lockMode, setLockMode] = useState<'strict' | 'flexible'>('strict')
+  const [showModeInfo, setShowModeInfo] = useState(false)
 
   useEffect(() => {
     if (isSignedIn) {
@@ -822,21 +823,40 @@ export default function Home() {
                       <div className="pt-4 space-y-4 border-t border-zinc-800/50">
 
                         {/* MODE TOGGLE */}
-                        <div className="flex gap-2 p-1 bg-zinc-900 rounded-lg border border-zinc-700">
-                          <Button
-                            variant="ghost"
-                            className={`flex-1 h-8 text-xs ${lockMode === 'strict' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
-                            onClick={() => { setLockMode('strict'); localStorage.setItem("lockMode", 'strict') }}
-                          >
-                            Strict ($0.10/m)
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            className={`flex-1 h-8 text-xs ${lockMode === 'flexible' ? 'bg-zinc-800 text-blue-400 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
-                            onClick={() => { setLockMode('flexible'); localStorage.setItem("lockMode", 'flexible') }}
-                          >
-                            Flexible ($0.30/m)
-                          </Button>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center px-1">
+                            <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Lock Mode</span>
+                            <button
+                              onClick={() => setShowModeInfo(!showModeInfo)}
+                              className="text-zinc-500 hover:text-white transition-colors"
+                            >
+                              <Info className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          {showModeInfo && (
+                            <div className="p-3 bg-zinc-900/80 rounded-lg border border-zinc-700 text-xs text-zinc-300 space-y-2 mb-2">
+                              <p><strong className="text-white">Strict ($0.10/min):</strong> Classic mode. If you switch tabs or minimize, you fail immediately.</p>
+                              <p><strong className="text-blue-400">Flexible ($0.30/min):</strong> Premium mode. Allows research (tab switching) without penalty.</p>
+                            </div>
+                          )}
+
+                          <div className="flex gap-2 p-1 bg-zinc-900 rounded-lg border border-zinc-700">
+                            <Button
+                              variant="ghost"
+                              className={`flex-1 h-8 text-xs ${lockMode === 'strict' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                              onClick={() => { setLockMode('strict'); localStorage.setItem("lockMode", 'strict') }}
+                            >
+                              Strict ($0.10/m)
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              className={`flex-1 h-8 text-xs ${lockMode === 'flexible' ? 'bg-zinc-800 text-blue-400 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                              onClick={() => { setLockMode('flexible'); localStorage.setItem("lockMode", 'flexible') }}
+                            >
+                              Flexible ($0.30/m)
+                            </Button>
+                          </div>
                         </div>
 
                         <div className="flex justify-between items-center text-sm">
