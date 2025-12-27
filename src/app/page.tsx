@@ -13,6 +13,8 @@ import { AIAssistant } from "@/components/AIAssistant"
 import { AISuggestion } from "@/app/api/ai/suggest/route"
 import { DeepLockDisclaimer } from "@/components/DeepLockDisclaimer"
 import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs"
+import { LandingPage } from "@/components/LandingPage"
+import Link from "next/link"
 
 export default function Home() {
   const { isSignedIn, user } = useUser()
@@ -35,6 +37,9 @@ export default function Home() {
 
   const [isLocked, setIsLocked] = useState(false)
   const [failureReason, setFailureReason] = useState<string | null>(null)
+
+  // New state for guest onboarding
+  const [hasEnteredApp, setHasEnteredApp] = useState(false)
 
   useEffect(() => {
     if (isSignedIn) {
@@ -556,13 +561,37 @@ export default function Home() {
     )
   }
 
-  // Authenticated User View
-  if (isSignedIn) {
+  // Authenticated User View OR Guest who entered app
+  if (isSignedIn || hasEnteredApp) {
     return (
       <main className="min-h-screen bg-black text-white font-sans selection:bg-blue-500/30 relative">
-        {/* Header: User Profile */}
-        <div className="absolute top-4 right-4 z-30">
-          <UserButton afterSignOutUrl="/" />
+        {/* Header: User Profile & Admin & Auth */}
+        <div className="absolute top-4 right-4 z-30 flex gap-4 items-center">
+          {isSignedIn && user?.primaryEmailAddress?.emailAddress === "ryanpinnock10@gmail.com" && (
+            <Link href="/admin">
+              <Button variant="outline" className="text-zinc-300 border-zinc-700 bg-black/50 hover:bg-zinc-800 flex items-center gap-2">
+                <LayoutDashboard className="w-4 h-4" />
+                Admin
+              </Button>
+            </Link>
+          )}
+
+          {isSignedIn ? (
+            <UserButton afterSignOutUrl="/" />
+          ) : (
+            <div className="flex gap-2">
+              <SignInButton mode="modal">
+                <Button variant="ghost" className="text-zinc-300 hover:text-white hover:bg-zinc-800 text-sm">
+                  Sign In
+                </Button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <Button variant="outline" className="text-black bg-white hover:bg-zinc-200 border-none text-sm">
+                  Sign Up
+                </Button>
+              </SignUpButton>
+            </div>
+          )}
         </div>
 
         {/* Tab Navigation */}
@@ -717,65 +746,13 @@ export default function Home() {
   // Guest View (Landing Page)
   return (
     <main className="min-h-screen bg-black text-white font-sans selection:bg-blue-500/30 relative overflow-hidden flex flex-col items-center justify-center p-4">
-      {/* Auth Button Top Right */}
-      <div className="absolute top-4 right-4 z-20 flex gap-4">
-        <SignInButton mode="modal">
-          <Button variant="ghost" className="text-zinc-300 hover:text-white hover:bg-zinc-800">
-            Sign In
-          </Button>
-        </SignInButton>
-        <SignUpButton mode="modal">
-          <Button variant="outline" className="text-black bg-white hover:bg-zinc-200 border-none">
-            Sign Up
-          </Button>
-        </SignUpButton>
-      </div>
-
       {/* Background Elements */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900 via-black to-black" />
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[100px] animate-pulse" />
       </div>
 
-      {/* Landing Content */}
-      <Card className="z-10 w-full max-w-md bg-zinc-900/50 border-zinc-800 backdrop-blur-xl p-8 flex flex-col gap-8 shadow-2xl">
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-zinc-800/50 mb-4 ring-1 ring-zinc-700">
-            <Lock className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold tracking-tighter text-white">Locked In</h1>
-          <p className="text-zinc-400">Focus on what matters. No distractions.</p>
-        </div>
-
-        <div className="space-y-6">
-          <div className="space-y-4 opacity-50 pointer-events-none filter blur-[1px]">
-            {/* Blurred Preview of Controls */}
-            <div className="flex justify-between items-center">
-              <label className="text-sm font-medium text-zinc-300 flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                Duration
-              </label>
-              <span className="text-2xl font-bold tabular-nums text-blue-400">30 min</span>
-            </div>
-            <Slider defaultValue={[30]} max={180} className="py-4" />
-          </div>
-
-          <div className="space-y-3 pt-4 border-t border-zinc-800">
-            <p className="text-center text-zinc-300 text-sm">
-              Sign in to track your progress and start locking in.
-            </p>
-          </div>
-
-          <SignInButton mode="modal">
-            <Button
-              size="lg"
-              className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-lg h-14 shadow-lg shadow-blue-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
-            >
-              Get Started
-            </Button>
-          </SignInButton>
-        </div>
-      </Card>
+      <LandingPage onEnterApp={() => setHasEnteredApp(true)} />
     </main>
   )
 }

@@ -1,9 +1,10 @@
 import { Card } from "@/components/ui/card"
 import { Users, Clock, DollarSign, TrendingUp } from "lucide-react"
 import prisma from "@/lib/prisma"
+import { UserGrowthChart } from "@/components/admin/UserGrowthChart"
+import { RevenueChart } from "@/components/admin/RevenueChart"
 
 async function getStats() {
-    // These are placeholder queries - will need to be refined based on actual data structure
     const totalUsers = await prisma.user.count()
     const totalSessions = await prisma.transaction.count({
         where: { type: "USAGE" }
@@ -12,6 +13,51 @@ async function getStats() {
         where: { type: "PURCHASE" },
         _sum: { amount: true }
     })
+
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+
+    // Monthly stats for charts
+    const usersByDay = await prisma.user.findMany({
+        where: { createdAt: { gte: thirtyDaysAgo } },
+        select: { createdAt: true },
+        orderBy: { createdAt: 'asc' }
+    })
+
+    const revenueByDay = await prisma.transaction.findMany({
+        where: {
+            type: "PURCHASE",
+            createdAt: { gte: thirtyDaysAgo }
+        },
+        select: { amount: true, createdAt: true },
+        orderBy: { createdAt: 'asc' }
+    })
+
+    // Process data for Recharts
+    const processUserGrowth = () => {
+        const days: Record<string, number> = {}
+        for (let i = 0; i < 30; i++) {
+            const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+            days[date] = 0
+        }
+        usersByDay.forEach(u => {
+            const date = u.createdAt.toISOString().split('T')[0]
+            if (days[date] !== undefined) days[date]++
+        })
+        return Object.entries(days).map(([date, count]) => ({ date, count })).reverse()
+    }
+
+    const processRevenue = () => {
+        const days: Record<string, number> = {}
+        for (let i = 0; i < 30; i++) {
+            const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+            days[date] = 0
+        }
+        revenueByDay.forEach(r => {
+            const date = r.createdAt.toISOString().split('T')[0]
+            if (days[date] !== undefined) days[date] += r.amount / 100
+        })
+        return Object.entries(days).map(([date, amount]) => ({ date, amount })).reverse()
+    }
 
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
     const activeToday = await prisma.transaction.groupBy({
@@ -27,8 +73,10 @@ async function getStats() {
     return {
         totalUsers,
         totalSessions,
-        totalRevenue: (totalRevenue?._sum?.amount || 0) / 100, // Convert cents to dollars
-        activeToday
+        totalRevenue: (totalRevenue?._sum?.amount || 0) / 100,
+        activeToday,
+        userGrowthData: processUserGrowth(),
+        revenueData: processRevenue()
     }
 }
 
@@ -64,13 +112,18 @@ export default async function AdminOverview() {
                 })}
             </div>
 
-            {/* Placeholder for Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card className="bg-zinc-900 border-zinc-800 p-6 h-80 flex items-center justify-center text-zinc-300">
-                    User Growth Chart (Coming Soon)
+                <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-4">
+                    <h3 className="text-lg font-medium text-white">User Growth (Last 30 Days)</h3>
+                    <div className="h-80">
+                        <UserGrowthChart data={stats.userGrowthData} />
+                    </div>
                 </Card>
-                <Card className="bg-zinc-900 border-zinc-800 p-6 h-80 flex items-center justify-center text-zinc-300">
-                    Revenue Chart (Coming Soon)
+                <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-4">
+                    <h3 className="text-lg font-medium text-white">Revenue (Last 30 Days)</h3>
+                    <div className="h-80">
+                        <RevenueChart data={stats.revenueData} />
+                    </div>
                 </Card>
             </div>
         </div>
