@@ -12,7 +12,7 @@ import { Dashboard, Session } from "@/components/Dashboard"
 import { AIAssistant } from "@/components/AIAssistant"
 import { AISuggestion } from "@/app/api/ai/suggest/route"
 import { DeepLockDisclaimer } from "@/components/DeepLockDisclaimer"
-import { SignInButton, UserButton, useUser } from "@clerk/nextjs"
+import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs"
 
 export default function Home() {
   const { isSignedIn, user } = useUser()
@@ -118,6 +118,55 @@ export default function Home() {
       restore()
     }
   }, [timeLeft])
+
+  // STRICT ENFORCEMENT: Block DevTools and Escape
+  useEffect(() => {
+    if (!isLocked) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Block F12 (DevTools)
+      if (e.key === 'F12') {
+        e.preventDefault()
+        e.stopPropagation()
+        return false
+      }
+
+      // Block Ctrl+Shift+I / Cmd+Option+I (DevTools)
+      if ((e.ctrlKey && e.shiftKey && e.key === 'I') || (e.metaKey && e.altKey && e.key === 'i')) {
+        e.preventDefault()
+        e.stopPropagation()
+        return false
+      }
+
+      // Block Ctrl+Shift+J / Cmd+Option+J (DevTools Console)
+      if ((e.ctrlKey && e.shiftKey && e.key === 'J') || (e.metaKey && e.altKey && e.key === 'j')) {
+        e.preventDefault()
+        e.stopPropagation()
+        return false
+      }
+
+      // Block Ctrl+Shift+C / Cmd+Option+C (Inspect Element)
+      if ((e.ctrlKey && e.shiftKey && e.key === 'C') || (e.metaKey && e.altKey && e.key === 'c')) {
+        e.preventDefault()
+        e.stopPropagation()
+        return false
+      }
+
+      // Block Escape (Try to prevent it, though browser might override)
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        e.stopPropagation()
+        // Re-enforce fullscreen if possible
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => { })
+        }
+        return false
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown, true)
+    return () => window.removeEventListener('keydown', handleKeyDown, true)
+  }, [isLocked])
 
   const requestWakeLock = async () => {
     try {
@@ -344,6 +393,55 @@ export default function Home() {
     }
   }
 
+  const handlePayToUnlock = async () => {
+    // If guest, just unlock (no wallet to charge)
+    if (!isSignedIn) {
+      setIsLocked(false)
+      setShowUnlockFlow(false)
+      localStorage.removeItem("targetEndTime")
+      localStorage.removeItem("totalDuration")
+      localStorage.removeItem("sessionIntent")
+      releaseWakeLock()
+      releaseKeyboardLock()
+      saveSession('failed')
+      return
+    }
+
+    const penaltyAmount = 500 // $5.00
+    try {
+      const res = await fetch("/api/user/transaction", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: penaltyAmount,
+          type: "USAGE",
+          description: "Emergency Unlock Penalty"
+        })
+      })
+
+      if (!res.ok) {
+        if (res.status === 402) {
+          alert("Insufficient funds to pay penalty! Top up or wait it out.")
+          return
+        }
+        throw new Error("Transaction failed")
+      }
+
+      // Success - Unlock without "failed" status (or maybe 'paid_exit')
+      setIsLocked(false)
+      setShowUnlockFlow(false)
+      localStorage.removeItem("targetEndTime")
+      localStorage.removeItem("totalDuration")
+      localStorage.removeItem("sessionIntent")
+      releaseWakeLock()
+      releaseKeyboardLock()
+      saveSession('completed') // Marking as completed because they paid the price
+    } catch (error) {
+      console.error("Pay unlock failed", error)
+      alert("Failed to process penalty payment.")
+    }
+  }
+
   const releaseKeyboardLock = () => {
     // @ts-ignore
     if (navigator.keyboard && navigator.keyboard.unlock) {
@@ -444,7 +542,12 @@ export default function Home() {
             />
             <AnimatePresence>
               {showUnlockFlow && (
-                <UnlockFlow onUnlockComplete={handleUnlockConfirm} onCancel={handleUnlockCancel} />
+                <UnlockFlow
+                  onUnlockComplete={handleUnlockConfirm}
+                  onCancel={handleUnlockCancel}
+                  onPayToUnlock={handlePayToUnlock}
+                  balance={balance}
+                />
               )}
             </AnimatePresence>
           </motion.div>
@@ -615,12 +718,17 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-black text-white font-sans selection:bg-blue-500/30 relative overflow-hidden flex flex-col items-center justify-center p-4">
       {/* Auth Button Top Right */}
-      <div className="absolute top-4 right-4 z-20">
+      <div className="absolute top-4 right-4 z-20 flex gap-4">
         <SignInButton mode="modal">
-          <Button variant="outline" className="text-black bg-white hover:bg-zinc-200 border-none">
+          <Button variant="ghost" className="text-zinc-300 hover:text-white hover:bg-zinc-800">
             Sign In
           </Button>
         </SignInButton>
+        <SignUpButton mode="modal">
+          <Button variant="outline" className="text-black bg-white hover:bg-zinc-200 border-none">
+            Sign Up
+          </Button>
+        </SignUpButton>
       </div>
 
       {/* Background Elements */}

@@ -11,9 +11,11 @@ import { Label } from "@/components/ui/label"
 interface UnlockFlowProps {
     onUnlockComplete: () => void
     onCancel: () => void
+    onPayToUnlock: () => void
+    balance: number | null
 }
 
-export function UnlockFlow({ onUnlockComplete, onCancel }: UnlockFlowProps) {
+export function UnlockFlow({ onUnlockComplete, onCancel, onPayToUnlock, balance }: UnlockFlowProps) {
     const [step, setStep] = useState(1)
     const [confirmationText, setConfirmationText] = useState("")
     const [isShake, setIsShake] = useState(false)
@@ -92,17 +94,28 @@ export function UnlockFlow({ onUnlockComplete, onCancel }: UnlockFlowProps) {
                             <div className="mx-auto w-16 h-16 bg-orange-500/10 rounded-full flex items-center justify-center mb-4">
                                 <AlertTriangle className="w-8 h-8 text-orange-500" />
                             </div>
-                            <h2 className="text-xl font-bold text-white">Really sure?</h2>
+                            <h2 className="text-xl font-bold text-white">Unlock Early?</h2>
                             <p className="text-zinc-400 text-sm">
-                                Distractions are waiting. Your goals are waiting too. Which one do you choose?
+                                You can pay a penalty to unlock without failing, or admit defeat.
                             </p>
-                            <div className="flex gap-3 pt-4">
-                                <Button variant="outline" className="flex-1 border-zinc-700 hover:bg-zinc-800" onClick={onCancel}>
-                                    Keep Focusing
+
+                            <div className="grid gap-3 pt-4">
+                                <Button
+                                    className="w-full bg-blue-600 hover:bg-blue-500 text-white border-none"
+                                    onClick={onPayToUnlock}
+                                    disabled={balance !== null && balance < 500}
+                                >
+                                    Pay $5.00 Penalty {(balance !== null && balance < 500) ? "(Insufficient Funds)" : ""}
                                 </Button>
-                                <Button variant="destructive" className="flex-1" onClick={handleStep2}>
-                                    Unlock Anyway
-                                </Button>
+
+                                <div className="flex gap-3">
+                                    <Button variant="outline" className="flex-1 border-zinc-700 hover:bg-zinc-800" onClick={onCancel}>
+                                        Cancel
+                                    </Button>
+                                    <Button variant="destructive" className="flex-1" onClick={handleStep2}>
+                                        I give up (Fail)
+                                    </Button>
+                                </div>
                             </div>
                         </motion.div>
                     )}
