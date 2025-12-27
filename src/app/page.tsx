@@ -16,7 +16,8 @@ import { SignInButton, UserButton, useUser } from "@clerk/nextjs"
 
 export default function Home() {
   const { isSignedIn, user } = useUser()
-  const [isLocked, setIsLocked] = useState(false)
+  const [balance, setBalance] = useState<number | null>(null)
+
   const [duration, setDuration] = useState([30]) // Default 30 minutes
   const [timeLeft, setTimeLeft] = useState(0)
   const [totalDuration, setTotalDuration] = useState(0)
@@ -32,6 +33,18 @@ export default function Home() {
   const [showDeepLockDisclaimer, setShowDeepLockDisclaimer] = useState(false)
   const [pendingDuration, setPendingDuration] = useState<number | undefined>(undefined)
 
+  const [isLocked, setIsLocked] = useState(false)
+  const [failureReason, setFailureReason] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (isSignedIn) {
+      fetch("/api/user/balance")
+        .then(res => res.json())
+        .then(data => setBalance(data.balance))
+        .catch(err => console.error("Failed to fetch balance", err))
+    }
+  }, [isSignedIn, activeTab, failureReason]) // Refetch when failure happens to show deducted balance
+
   // Effect: When user signs in, ensure they land on dashboard
   useEffect(() => {
     if (isSignedIn) {
@@ -45,7 +58,9 @@ export default function Home() {
   useEffect(() => {
     if (!isLocked) return
 
-    const handleSecurityEvent = async () => {
+    console.log("Details: Focus Guard ACTIVE")
+    const handleSecurityEvent = async (e?: Event) => {
+      console.log("Security Check:", e?.type, "| Hidden:", document.hidden, "| HasFocus:", document.hasFocus())
       if (document.hidden || !document.hasFocus()) {
         // Tab switch OR Window/App switch detected - FAIL IMMEDIATELY
         saveSession('failed')
@@ -59,7 +74,8 @@ export default function Home() {
         if (document.fullscreenElement) {
           document.exitFullscreen()
         }
-        alert("CHEATER DETECTED! 😡 Session failed because you switch tabs or applications.")
+        releaseKeyboardLock()
+        setFailureReason("CHEATER DETECTED! 😡 Session failed because you switch tabs or applications.")
       }
     }
 
@@ -68,17 +84,40 @@ export default function Home() {
       e.returnValue = ""
     }
 
+    const handleFullscreenChange = () => {
+      if (isLocked && !document.fullscreenElement) {
+        // User exited fullscreen (e.g. prevent default or accidental escape)
+        // We cannot force it back immediately without user interaction, 
+        // but we can set a state to show a "Click to Return" overlay
+        // For now, we rely on the visual "Deep Lock" which might just be the lock screen itself.
+        // But if they are locked, they should be in fullscreen.
+      }
+    }
+
     document.addEventListener("visibilitychange", handleSecurityEvent)
     window.addEventListener("blur", handleSecurityEvent)
     window.addEventListener("beforeunload", handleBeforeUnload)
+    document.addEventListener("fullscreenchange", handleFullscreenChange)
 
     return () => {
       document.removeEventListener("visibilitychange", handleSecurityEvent)
       window.removeEventListener("blur", handleSecurityEvent)
       window.removeEventListener("beforeunload", handleBeforeUnload)
+      document.removeEventListener("fullscreenchange", handleFullscreenChange)
       document.title = "Locked In"
     }
   }, [isLocked])
+
+  // Re-request fullscreen periodically if locked (browser might block this, but worth a try)
+  useEffect(() => {
+    if (isLocked && !document.fullscreenElement) {
+      // Attempt to restore
+      const restore = async () => {
+        try { await document.documentElement.requestFullscreen() } catch (e) { }
+      }
+      restore()
+    }
+  }, [timeLeft])
 
   const requestWakeLock = async () => {
     try {
@@ -158,6 +197,7 @@ export default function Home() {
           if (document.fullscreenElement) {
             document.exitFullscreen()
           }
+          releaseKeyboardLock()
           saveSession('completed')
           return 0
         }
@@ -183,6 +223,27 @@ export default function Home() {
     const seconds = finalDuration * 60
     const cost = Math.round(finalDuration * 10) // $0.10 per minute -> 10 cents per minute
 
+    // REQUEST FULLSCREEN AND LOCK KEYBOARD IMMEDIATELY (User Gesture)
+    try {
+      if (document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen()
+
+        // EXPERIMENTAL: Keyboard Lock (Chrome/Edge only)
+        // @ts-ignore
+        if (navigator.keyboard && navigator.keyboard.lock) {
+          try {
+            // @ts-ignore
+            await navigator.keyboard.lock(['Escape', 'AltLeft', 'AltRight', 'Tab', 'MetaLeft', 'MetaRight', 'ControlLeft', 'ControlRight'])
+            console.log("Keyboard locked")
+          } catch (err) {
+            console.warn("Keyboard lock failed", err)
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Fullscreen failed:", err)
+    }
+
     try {
       const res = await fetch("/api/sessions", {
         method: "POST",
@@ -200,9 +261,13 @@ export default function Home() {
 
       if (!res.ok) {
         if (res.status === 402) {
+          if (document.fullscreenElement) document.exitFullscreen()
+          releaseKeyboardLock()
           alert("Insufficient funds! Please top up your wallet.")
           return
         }
+        if (document.fullscreenElement) document.exitFullscreen()
+        releaseKeyboardLock()
         throw new Error("Failed to start session")
       }
 
@@ -224,17 +289,10 @@ export default function Home() {
       setShowAIAssistant(false) // Close AI assistant after starting session
       requestWakeLock()
 
-      // REQUEST FULLSCREEN
-      try {
-        if (document.documentElement.requestFullscreen) {
-          await document.documentElement.requestFullscreen()
-        }
-      } catch (err) {
-        console.error("Fullscreen failed:", err)
-      }
-
     } catch (error) {
       console.error("Lock In failed", error)
+      if (document.fullscreenElement) document.exitFullscreen()
+      releaseKeyboardLock()
       alert("Failed to start session. Please try again.")
     }
   }
@@ -286,6 +344,19 @@ export default function Home() {
     }
   }
 
+  const releaseKeyboardLock = () => {
+    // @ts-ignore
+    if (navigator.keyboard && navigator.keyboard.unlock) {
+      try {
+        // @ts-ignore
+        navigator.keyboard.unlock()
+        console.log("Keyboard unlocked")
+      } catch (err) {
+        console.warn("Keyboard unlock failed", err)
+      }
+    }
+  }
+
   const handleUnlockRequest = () => setShowUnlockFlow(true)
 
   const handleUnlockConfirm = () => {
@@ -295,6 +366,7 @@ export default function Home() {
     localStorage.removeItem("totalDuration")
     localStorage.removeItem("sessionIntent")
     releaseWakeLock()
+    releaseKeyboardLock()
     saveSession('failed')
   }
 
@@ -319,6 +391,32 @@ export default function Home() {
       </button>
     </div>
   )
+
+  if (failureReason) {
+    return (
+      <main className="min-h-screen bg-black text-white font-sans flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-red-950/20 z-0 animate-pulse" />
+        <Card className="w-full max-w-md bg-zinc-900 border-red-900/50 p-8 flex flex-col items-center text-center gap-6 z-10 shadow-2xl shadow-red-900/20">
+          <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center">
+            <ShieldCheck className="w-10 h-10 text-red-500" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold text-red-500">SESSION FAILED</h1>
+            <p className="text-zinc-400">{failureReason}</p>
+          </div>
+          <div className="p-4 bg-red-950/30 rounded-lg border border-red-900/30 w-full">
+            <p className="text-sm text-red-300">Your wager based on time remaining has been forfeited.</p>
+          </div>
+          <Button
+            onClick={() => setFailureReason(null)}
+            className="w-full bg-white text-black hover:bg-zinc-200 font-bold"
+          >
+            I Understand
+          </Button>
+        </Card>
+      </main>
+    )
+  }
 
   // If locked, show lock screen regardless of auth state (persistence)
   if (isLocked) {
@@ -432,11 +530,31 @@ export default function Home() {
                         <span>5m</span>
                         <span>3h</span>
                       </div>
-                      <div className="flex justify-between items-center pt-2">
-                        <span className="text-sm text-zinc-400">Session Cost</span>
-                        <span className="text-xl font-bold text-green-400">
-                          ${(duration[0] * 0.10).toFixed(2)}
-                        </span>
+
+                      <div className="pt-4 space-y-2 border-t border-zinc-800/50">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-zinc-400">Current Balance</span>
+                          <span className="font-mono text-zinc-300">
+                            {balance !== null ? `$${(balance / 100).toFixed(2)}` : "..."}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-zinc-400">Session Cost</span>
+                          <span className="text-xl font-bold text-green-400">
+                            ${(duration[0] * 0.10).toFixed(2)}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-zinc-400">Remaining After</span>
+                          <span className={`font-mono font-bold ${(balance || 0) - (duration[0] * 10) < 0 ? "text-red-400" : "text-zinc-300"
+                            }`}>
+                            {balance !== null
+                              ? `$${((balance - (duration[0] * 10)) / 100).toFixed(2)}`
+                              : "..."}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
@@ -451,7 +569,7 @@ export default function Home() {
                       size="lg"
                       className="w-full bg-white text-black hover:bg-zinc-200 font-bold text-lg h-14 shadow-lg shadow-white/5 transition-all hover:scale-[1.02] active:scale-[0.98]"
                       onClick={handleLockIn}
-                      disabled={!intent.trim()} // Require intent? Maybe optional but encouraged. Let's leave enabled but maybe highlight if empty.
+                      disabled={!intent.trim()}
                     >
                       Lock In Now
                     </Button>
@@ -485,21 +603,6 @@ export default function Home() {
                     }}
                   />
                 )}
-
-                {/* Micro-automation for development flow */}
-                <script dangerouslySetInnerHTML={{
-                  __html: `
-                    window.autoConfirmed = false;
-                    const checkInterval = setInterval(() => {
-                        const btns = document.querySelectorAll('button');
-                        btns.forEach(btn => {
-                            if (btn.innerText.includes('Lock In Now') && !window.autoConfirmed) {
-                                // Potentially auto-click for the user if they want fully automated tests
-                                // But for now, just logging it's ready.
-                            }
-                        });
-                    }, 500);
-                `}} />
               </motion.div>
             )}
           </AnimatePresence>
