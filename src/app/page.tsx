@@ -62,17 +62,40 @@ export default function Home() {
     // Check if we just returned from Stripe
     const params = new URLSearchParams(window.location.search)
     if (params.get('success') === 'true') {
-      // Clear the param so it doesn't persist on refresh
+
+      const isGuestParams = params.get('guest') === 'true'
+      // Clear the param
       window.history.replaceState({}, '', window.location.pathname)
 
-      // Force refresh balance
-      if (isSignedIn) {
-        fetch("/api/user/balance")
-          .then(res => res.json())
-          .then(data => setBalance(data.balance))
+      if (isGuestParams) {
+        // GUEST RESTORATION
+        const pending = localStorage.getItem("pendingGuestSession")
+        if (pending) {
+          const { duration, intent } = JSON.parse(pending)
+          // startGuestSession is defined below, but useEffect captures it? 
+          // React hoisting (function declaration) works, but const function expressions might not if defined later.
+          // Wait, handleGuestCheckout was defined AFTER useEffect. 
+          // If startGuestSession is defined via 'const', it acts like a variable.
+          // Since it's inside the component, it might be TBD.
+          // To be safe, I should move startGuestSession ABOVE useEffect or use a ref?
+          // Or rely on JS event loop (useEffect runs after render).
+          // Let's assume startGuestSession is available since useEffect runs after mount.
+          startGuestSession(duration, intent)
+          localStorage.removeItem("pendingGuestSession")
+          alert("Guest Session Started! Good luck.")
+        } else {
+          alert("Payment successful, but session details were lost. Please set your timer again.")
+        }
+      } else {
+        // AUTHENTICATED RESTORATION
+        if (isSignedIn) {
+          fetch("/api/user/balance")
+            .then(res => res.json())
+            .then(data => setBalance(data.balance))
+        }
+        alert("Payment Successful! Credits added to your wallet.")
       }
       setActiveTab('dashboard')
-      alert("Payment Successful! Credits added to your wallet.")
     }
 
     if (params.get('canceled') === 'true') {
@@ -286,13 +309,79 @@ export default function Home() {
   }, [isLocked, timeLeft])
 
   const handleLockIn = () => {
-    if (!isSignedIn || !intent.trim()) return
+    if (!intent.trim()) return
+
+    if (!isSignedIn) {
+      handleGuestCheckout()
+      return
+    }
+
     setShowAIAssistant(true)
   }
 
   const triggerDeepLock = (duration?: number) => {
     setPendingDuration(duration)
     setShowDeepLockDisclaimer(true)
+  }
+
+  const handleGuestCheckout = async () => {
+    const finalDuration = duration[0]
+    const cost = Math.round(finalDuration * 10) // 10 cents per minute
+
+    // Save pending state
+    localStorage.setItem("pendingGuestSession", JSON.stringify({
+      duration: finalDuration,
+      intent: intent
+    }))
+
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: cost,
+          isGuest: true
+        })
+      })
+
+      if (!res.ok) throw new Error("Checkout failed")
+      const { url } = await res.json()
+      if (url) window.location.href = url
+    } catch (e) {
+      console.error("Guest checkout error", e)
+      alert("Failed to initiate guest checkout.")
+    }
+  }
+
+  const startGuestSession = async (durationMinutes: number, sessionIntent: string) => {
+    const seconds = durationMinutes * 60
+
+    // Request Fullscreen/WakeLock locally
+    try {
+      if (document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen()
+        // @ts-ignore
+        if (navigator.keyboard && navigator.keyboard.lock) {
+          // @ts-ignore
+          navigator.keyboard.lock(['Escape', 'AltLeft', 'AltRight', 'Tab', 'MetaLeft', 'MetaRight', 'ControlLeft', 'ControlRight']).catch(console.warn)
+        }
+      }
+    } catch (e) { console.warn("Fullscreen failed", e) }
+
+    const now = Date.now()
+    const endTime = now + seconds * 1000
+
+    localStorage.setItem("targetEndTime", endTime.toString())
+    localStorage.setItem("totalDuration", seconds.toString())
+    localStorage.setItem("sessionIntent", sessionIntent)
+    // No activeSessionId for guests (client-side only)
+
+    setTimeLeft(seconds)
+    setTotalDuration(seconds)
+    setDuration([durationMinutes])
+    setIntent(sessionIntent)
+    setIsLocked(true)
+    requestWakeLock()
   }
 
   const startSession = async (suggestedDuration?: number) => {
