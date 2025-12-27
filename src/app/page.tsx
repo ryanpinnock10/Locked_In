@@ -41,6 +41,9 @@ export default function Home() {
   // New state for guest onboarding
   const [hasEnteredApp, setHasEnteredApp] = useState(false)
 
+  // Flexible Mode State: 'strict' ($0.10/min, blocks tabs) vs 'flexible' ($0.30/min, allows tabs)
+  const [lockMode, setLockMode] = useState<'strict' | 'flexible'>('strict')
+
   useEffect(() => {
     if (isSignedIn) {
       fetch("/api/user/balance")
@@ -55,6 +58,10 @@ export default function Home() {
     if (isSignedIn) {
       setActiveTab('dashboard')
     }
+
+    // Restore lock mode preference
+    const storedMode = localStorage.getItem("lockMode")
+    if (storedMode === 'flexible') setLockMode('flexible')
   }, [isSignedIn])
 
   // Payment Success Handling
@@ -108,6 +115,12 @@ export default function Home() {
   // Focus Guard: Detect tab switching
   useEffect(() => {
     if (!isLocked) return
+
+    // SKIP IF FLEXIBLE MODE
+    if (lockMode === 'flexible') {
+      console.log("Details: Flexible Mode Active - Focus Guard Disabled")
+      return
+    }
 
     console.log("Details: Focus Guard ACTIVE")
     const handleSecurityEvent = async (e?: Event) => {
@@ -326,13 +339,17 @@ export default function Home() {
 
   const handleGuestCheckout = async () => {
     const finalDuration = duration[0]
-    const cost = Math.round(finalDuration * 10) // 10 cents per minute
+    const rate = lockMode === 'flexible' ? 30 : 10
+    const cost = Math.round(finalDuration * rate)
 
     // Save pending state
     localStorage.setItem("pendingGuestSession", JSON.stringify({
       duration: finalDuration,
       intent: intent
     }))
+
+    // Save mode preference for restoration
+    localStorage.setItem("lockMode", lockMode)
 
     try {
       const res = await fetch("/api/stripe/checkout", {
@@ -387,7 +404,8 @@ export default function Home() {
   const startSession = async (suggestedDuration?: number) => {
     const finalDuration = suggestedDuration || duration[0]
     const seconds = finalDuration * 60
-    const cost = Math.round(finalDuration * 10) // $0.10 per minute -> 10 cents per minute
+    const rate = lockMode === 'flexible' ? 30 : 10
+    const cost = Math.round(finalDuration * rate)
 
     // REQUEST FULLSCREEN AND LOCK KEYBOARD IMMEDIATELY (User Gesture)
     try {
@@ -801,7 +819,26 @@ export default function Home() {
                         <span>3h</span>
                       </div>
 
-                      <div className="pt-4 space-y-2 border-t border-zinc-800/50">
+                      <div className="pt-4 space-y-4 border-t border-zinc-800/50">
+
+                        {/* MODE TOGGLE */}
+                        <div className="flex gap-2 p-1 bg-zinc-900 rounded-lg border border-zinc-700">
+                          <Button
+                            variant="ghost"
+                            className={`flex-1 h-8 text-xs ${lockMode === 'strict' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                            onClick={() => { setLockMode('strict'); localStorage.setItem("lockMode", 'strict') }}
+                          >
+                            Strict ($0.10/m)
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            className={`flex-1 h-8 text-xs ${lockMode === 'flexible' ? 'bg-zinc-800 text-blue-400 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                            onClick={() => { setLockMode('flexible'); localStorage.setItem("lockMode", 'flexible') }}
+                          >
+                            Flexible ($0.30/m)
+                          </Button>
+                        </div>
+
                         <div className="flex justify-between items-center text-sm">
                           <span className="text-zinc-400">Current Balance</span>
                           <span className="font-mono text-zinc-300">
@@ -812,16 +849,16 @@ export default function Home() {
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-zinc-400">Session Cost</span>
                           <span className="text-xl font-bold text-green-400">
-                            ${(duration[0] * 0.10).toFixed(2)}
+                            ${(duration[0] * (lockMode === 'strict' ? 0.10 : 0.30)).toFixed(2)}
                           </span>
                         </div>
 
                         <div className="flex justify-between items-center text-sm">
                           <span className="text-zinc-400">Remaining After</span>
-                          <span className={`font-mono font-bold ${(balance || 0) - (duration[0] * 10) < 0 ? "text-red-400" : "text-zinc-300"
+                          <span className={`font-mono font-bold ${(balance || 0) - (duration[0] * (lockMode === 'strict' ? 10 : 30)) < 0 ? "text-red-400" : "text-zinc-300"
                             }`}>
                             {balance !== null
-                              ? `$${((balance - (duration[0] * 10)) / 100).toFixed(2)}`
+                              ? `$${((balance - (duration[0] * (lockMode === 'strict' ? 10 : 30))) / 100).toFixed(2)}`
                               : "..."}
                           </span>
                         </div>
