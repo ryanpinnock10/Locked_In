@@ -57,6 +57,29 @@ export default function Home() {
     }
   }, [isSignedIn])
 
+  // Payment Success Handling
+  useEffect(() => {
+    // Check if we just returned from Stripe
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('success') === 'true') {
+      // Clear the param so it doesn't persist on refresh
+      window.history.replaceState({}, '', window.location.pathname)
+
+      // Force refresh balance
+      if (isSignedIn) {
+        fetch("/api/user/balance")
+          .then(res => res.json())
+          .then(data => setBalance(data.balance))
+      }
+      setActiveTab('dashboard')
+      alert("Payment Successful! Credits added to your wallet.")
+    }
+
+    if (params.get('canceled') === 'true') {
+      alert("Payment canceled.")
+    }
+  }, [isSignedIn])
+
   // Audio and Wake Lock functions removed
 
   // Focus Guard: Detect tab switching
