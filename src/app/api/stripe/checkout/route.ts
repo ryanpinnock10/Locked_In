@@ -9,18 +9,19 @@ export async function POST(req: Request) {
     try {
         const { userId } = await auth()
         const user = await currentUser()
-        const { amount } = await req.json()
+        const { amount, isGuest } = await req.json()
 
-        if (!userId || !user) {
+        if (!isGuest && (!userId || !user)) {
             console.error("[STRIPE_CHECKOUT] Unauthorized: Missing userId or user")
             return NextResponse.json({ error: "Unauthorized. Please sign in again." }, { status: 401 })
         }
 
-        // Validate amount (minimum $1.00 / 100 cents)
+        // Validate amount (minimum $0.50 / 50 cents) - Lowered for cheap sessions?
         const amountCents = Math.round(Number(amount))
-        if (!amountCents || typeof amountCents !== 'number' || amountCents < 100) {
+        // Stripe min is ~50 cents
+        if (!amountCents || typeof amountCents !== 'number' || amountCents < 50) {
             console.error("[STRIPE_CHECKOUT] Invalid amount:", amount)
-            return NextResponse.json({ error: "Invalid amount. Minimum is $1.00." }, { status: 400 })
+            return NextResponse.json({ error: "Invalid amount. Minimum is $0.50." }, { status: 400 })
         }
 
         // 1. Create Checkout Session
@@ -31,8 +32,10 @@ export async function POST(req: Request) {
                     price_data: {
                         currency: "usd",
                         product_data: {
-                            name: `${amountCents / 100} Focus Credits`,
-                            description: `Load $${(amountCents / 100).toFixed(2)} into your wallet`,
+                            name: isGuest ? "One-Time Focus Session" : `${amountCents / 100} Focus Credits`,
+                            description: isGuest
+                                ? "Pay-per-session access (No account required)"
+                                : `Load $${(amountCents / 100).toFixed(2)} into your wallet`,
                         },
                         unit_amount: amountCents,
                     },
@@ -40,11 +43,12 @@ export async function POST(req: Request) {
                 },
             ],
             mode: "payment",
-            success_url: `${settingsUrl}/?success=true`,
+            success_url: `${settingsUrl}/?success=true${isGuest ? '&guest=true' : ''}`,
             cancel_url: `${settingsUrl}/?canceled=true`,
             metadata: {
-                userId: userId, // Pass Clerk User ID to webhook
-                credits: amountCents.toString()
+                userId: userId || "", // Empty for guests
+                credits: amountCents.toString(),
+                isGuest: isGuest ? "true" : "false"
             }
         })
 
