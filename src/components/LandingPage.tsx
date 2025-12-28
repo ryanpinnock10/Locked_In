@@ -61,6 +61,14 @@ export function LandingPage({ onEnterApp }: { onEnterApp: () => void }) {
                 />
             </div>
 
+            {/* Footer */}
+            <footer className="mt-20 pt-8 border-t border-zinc-900 w-full text-zinc-500 text-sm flex flex-col md:flex-row justify-between items-center gap-4">
+                <p>© {new Date().getFullYear()} Locked In. All rights reserved.</p>
+                <div className="flex gap-6">
+                    <a href="/terms" className="hover:text-zinc-300 transition-colors">Terms of Service</a>
+                    <a href="/privacy" className="hover:text-zinc-300 transition-colors">Privacy Policy</a>
+                </div>
+            </footer>
         </div>
     )
 }
