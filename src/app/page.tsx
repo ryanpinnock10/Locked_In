@@ -608,21 +608,23 @@ export default function Home() {
 
   // RENDER HELPERS
   const renderTabNavigation = () => (
-    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex p-1 bg-zinc-900/80 backdrop-blur-md rounded-full border border-zinc-800">
-      <button
-        onClick={() => setActiveTab('dashboard')}
-        className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'dashboard' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-white'
-          }`}
-      >
-        Dashboard
-      </button>
-      <button
-        onClick={() => setActiveTab('lock-in')}
-        className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'lock-in' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-white'
-          }`}
-      >
-        Lock In
-      </button>
+    <div className="flex justify-center w-full z-20 mt-4 md:absolute md:top-4 md:left-1/2 md:-translate-x-1/2 md:mt-0">
+      <div className="flex p-1 bg-zinc-900/80 backdrop-blur-md rounded-full border border-zinc-800">
+        <button
+          onClick={() => setActiveTab('dashboard')}
+          className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'dashboard' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-white'
+            }`}
+        >
+          Dashboard
+        </button>
+        <button
+          onClick={() => setActiveTab('lock-in')}
+          className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'lock-in' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-white'
+            }`}
+        >
+          Lock In
+        </button>
+      </div>
     </div>
   )
 
