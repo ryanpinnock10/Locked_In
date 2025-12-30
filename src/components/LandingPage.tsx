@@ -42,22 +42,67 @@ export function LandingPage({ onEnterApp }: { onEnterApp: () => void }) {
                 </div>
             </div>
 
+            {/* Problem Section: The Cost of Distraction */}
+            <div className="w-full max-w-4xl mx-auto mb-24 grid grid-cols-1 md:grid-cols-2 gap-12 items-center text-left">
+                <div className="space-y-6">
+                    <h2 className="text-3xl font-bold text-white">
+                        Optimization is a lie. <br />
+                        <span className="text-red-500">You are bleeding time.</span>
+                    </h2>
+                    <p className="text-zinc-400 text-lg leading-relaxed">
+                        Every notification, every "quick check" of social media resets your focus timer.
+                        Research shows it takes <strong>23 minutes</strong> to regain deep focus after a distraction.
+                    </p>
+                    <p className="text-zinc-400 text-lg leading-relaxed">
+                        You aren't just wasting moments; you are defaulting on your potential. The algorithms are betting against you, and right now, <strong>they are winning.</strong>
+                    </p>
+                </div>
+                <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-2xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
+                    <div className="space-y-6 relative z-10">
+                        <div className="flex items-start gap-4">
+                            <div className="p-2 bg-red-500/10 rounded-lg shrink-0">
+                                <ShieldAlert className="w-6 h-6 text-red-500" />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-white">The Doom Spiral</h3>
+                                <p className="text-sm text-zinc-400 mt-1">One notification turns into 45 minutes of scrolling.</p>
+                            </div>
+                        </div>
+                        <div className="flex items-start gap-4">
+                            <div className="p-2 bg-orange-500/10 rounded-lg shrink-0">
+                                <Timer className="w-6 h-6 text-orange-500" />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-white">Fragmented Attention</h3>
+                                <p className="text-sm text-zinc-400 mt-1">Surface-level work that never moves the needle.</p>
+                            </div>
+                        </div>
+                        <div className="pt-4 border-t border-zinc-800">
+                            <p className="text-white font-medium">The Solution?</p>
+                            <p className="text-blue-400 font-bold text-lg">Radical Consequence.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* Features Grid */}
+            <h2 className="text-2xl font-bold text-white mb-8">How Locked In Fights Back</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
                 <FeatureCard
                     icon={<Timer className="w-6 h-6 text-purple-400" />}
-                    title="Strict Timer"
-                    description="Set your goal. Once you lock in, there is no pausing. You commit or you fail."
+                    title="No-Mercy Timer"
+                    description="Once the session starts, there is no pause button. You finish the work, or you lose the session."
                 />
                 <FeatureCard
                     icon={<ShieldAlert className="w-6 h-6 text-red-400" />}
-                    title="Financial Penalty"
-                    description="If you quit early or try to give up, you pay a penalty. Put your wallet on the line."
+                    title="Real Stakes"
+                    description="We hit you where it hurts: your wallet. Put money on the line to force your brain to care."
                 />
                 <FeatureCard
                     icon={<Zap className="w-6 h-6 text-yellow-400" />}
-                    title="Deep Focus"
-                    description="Minimalist 'Frozen' interface removes all clutter. Just you and the countdown."
+                    title="Hyper-Focus Mode"
+                    description="We take over your screen. No sidebar, no tabs, no clutter. Just you and the objective."
                 />
             </div>
 
