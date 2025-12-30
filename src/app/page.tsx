@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Lock, Clock, ShieldCheck, LayoutDashboard, Info } from "lucide-react"
+import { Lock, Clock, ShieldCheck, LayoutDashboard, Info, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
@@ -330,7 +330,7 @@ export default function Home() {
       return
     }
 
-    setShowAIAssistant(true)
+    triggerDeepLock()
   }
 
   const triggerDeepLock = (duration?: number) => {
@@ -440,7 +440,8 @@ export default function Home() {
           aiSuggested: !!suggestedDuration,
           aiApproach: aiSuggestion?.approach || [],
           aiBlockedApps: aiSuggestion?.blockedApps || [],
-          aiTips: aiSuggestion?.tips || []
+          aiTips: aiSuggestion?.tips || [],
+          mode: lockMode
         })
       })
 
@@ -789,7 +790,18 @@ export default function Home() {
                   <div className="space-y-6">
                     {/* Intent Input */}
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-300">I am locking in to...</label>
+                      <div className="flex justify-between items-center">
+                        <label className="text-sm font-medium text-zinc-300">I am locking in to...</label>
+                        {isSignedIn && (
+                          <button
+                            onClick={() => setShowAIAssistant(true)}
+                            className="text-xs flex items-center gap-1.5 text-blue-400 hover:text-blue-300 transition-colors bg-blue-500/10 hover:bg-blue-500/20 px-2 py-1 rounded-full border border-blue-500/20"
+                          >
+                            <Sparkles className="w-3 h-3" />
+                            <span className="font-medium">AI Guide</span>
+                          </button>
+                        )}
+                      </div>
                       <input
                         type="text"
                         placeholder="e.g. Finish the report"

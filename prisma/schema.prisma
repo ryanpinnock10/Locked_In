@@ -45,6 +45,7 @@ model Session {
   aiBlockedApps String[]
   aiTips        String[]
   cost          Int       // in cents
+  mode          String    @default("strict") // "strict" | "flexible"
 
   user User @relation(fields: [userId], references: [id])
 }

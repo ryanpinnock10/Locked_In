@@ -3,6 +3,8 @@ import { Users, Clock, DollarSign, TrendingUp } from "lucide-react"
 import prisma from "@/lib/prisma"
 import { UserGrowthChart } from "@/components/admin/UserGrowthChart"
 import { RevenueChart } from "@/components/admin/RevenueChart"
+import { InsightsPanel } from "@/components/admin/InsightsPanel"
+import { GenerateReportButton } from "@/components/admin/GenerateReportButton"
 
 async function getStats() {
     const totalUsers = await prisma.user.count()
@@ -59,6 +61,40 @@ async function getStats() {
         return Object.entries(days).map(([date, amount]) => ({ date, amount })).reverse()
     }
 
+    // Insights Data
+    // Explicitly select fields. Note: 'mode' must be in schema.prisma and generated.
+    const sessions = await prisma.session.findMany({
+        where: { startTime: { gte: thirtyDaysAgo } },
+        select: { duration: true, mode: true, status: true, intent: true }
+    })
+
+    const totalSessionCount = sessions.length
+    const avgDuration = totalSessionCount > 0
+        ? Math.round(sessions.reduce((acc, s) => acc + s.duration, 0) / totalSessionCount)
+        : 0
+
+    // Safely access mode with default fallbacks if types act up
+    const modeSplit = {
+        strict: sessions.filter(s => s.mode === "strict").length,
+        flexible: sessions.filter(s => s.mode === "flexible").length
+    }
+
+    const completed = sessions.filter(s => s.status === "completed").length
+    const completionRate = totalSessionCount > 0
+        ? Math.round((completed / totalSessionCount) * 100)
+        : 0
+
+    // Simple intent grouping
+    const intentCounts: Record<string, number> = {}
+    sessions.forEach(s => {
+        const key = s.intent?.toLowerCase().trim() || "unknown"
+        intentCounts[key] = (intentCounts[key] || 0) + 1
+    })
+    const topIntents = Object.entries(intentCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([intent, count]) => ({ intent, count }))
+
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
     const activeToday = await prisma.transaction.groupBy({
         by: ['userId'],
@@ -76,7 +112,13 @@ async function getStats() {
         totalRevenue: (totalRevenue?._sum?.amount || 0) / 100,
         activeToday,
         userGrowthData: processUserGrowth(),
-        revenueData: processRevenue()
+        revenueData: processRevenue(),
+        insights: {
+            avgDuration,
+            modeSplit,
+            completionRate,
+            topIntents
+        }
     }
 }
 
@@ -92,9 +134,12 @@ export default async function AdminOverview() {
 
     return (
         <div className="space-y-8">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
-                <p className="text-zinc-200">Real-time performance metrics for Locked In.</p>
+            <div className="flex justify-between items-start">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
+                    <p className="text-zinc-200">Real-time performance metrics for Locked In.</p>
+                </div>
+                <GenerateReportButton />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -111,6 +156,14 @@ export default async function AdminOverview() {
                     )
                 })}
             </div>
+
+            {/* NEW INSIGHTS PANEL */}
+            <InsightsPanel
+                avgDuration={stats.insights.avgDuration}
+                modeSplit={stats.insights.modeSplit}
+                completionRate={stats.insights.completionRate}
+                topIntents={stats.insights.topIntents}
+            />
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-4">
