@@ -14,6 +14,7 @@ import { AISuggestion } from "@/app/api/ai/suggest/route"
 import { DeepLockDisclaimer } from "@/components/DeepLockDisclaimer"
 import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs"
 import { LandingPage } from "@/components/LandingPage"
+import { FeedbackWidget } from "@/components/FeedbackWidget"
 import Link from "next/link"
 
 export default function Home() {
@@ -962,6 +963,7 @@ export default function Home() {
       </div>
 
       <LandingPage onEnterApp={() => setHasEnteredApp(true)} />
+      <FeedbackWidget />
     </main>
   )
 }
