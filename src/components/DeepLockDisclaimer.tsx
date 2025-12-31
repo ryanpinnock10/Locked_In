@@ -1,8 +1,9 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { ShieldAlert, Check, X } from "lucide-react"
+import { ShieldAlert, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useTranslation } from "react-i18next"
 
 interface DeepLockDisclaimerProps {
     onConfirm: () => void
@@ -10,6 +11,8 @@ interface DeepLockDisclaimerProps {
 }
 
 export function DeepLockDisclaimer({ onConfirm, onCancel }: DeepLockDisclaimerProps) {
+    const { t } = useTranslation()
+
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl">
             <motion.div
@@ -22,9 +25,9 @@ export function DeepLockDisclaimer({ onConfirm, onCancel }: DeepLockDisclaimerPr
                 </div>
 
                 <div className="text-center space-y-2">
-                    <h2 className="text-2xl font-bold text-white">Enter Deep Lock-In?</h2>
+                    <h2 className="text-2xl font-bold text-white">{t('deepLock.title')}</h2>
                     <p className="text-zinc-400 text-sm leading-relaxed">
-                        This mode is designed for extreme focus. By confirming, you agree to the following:
+                        {t('deepLock.description')}
                     </p>
                 </div>
 
@@ -34,7 +37,7 @@ export function DeepLockDisclaimer({ onConfirm, onCancel }: DeepLockDisclaimerPr
                             <Check className="w-3 h-3 text-red-500" />
                         </div>
                         <p className="text-zinc-300">
-                            <span className="text-white font-semibold">Strict Fullscreen:</span> Your browser will expand to fill the screen. Leaving fullscreen fails the session.
+                            <span className="text-white font-semibold">{t('deepLock.strictFullscreen')}</span> {t('deepLock.strictFullscreenDesc')}
                         </p>
                     </div>
                     <div className="flex gap-3 text-xs">
@@ -42,7 +45,7 @@ export function DeepLockDisclaimer({ onConfirm, onCancel }: DeepLockDisclaimerPr
                             <Check className="w-3 h-3 text-red-500" />
                         </div>
                         <p className="text-zinc-300">
-                            <span className="text-white font-semibold">Instant Penalty:</span> Switching tabs or apps will <span className="text-red-400">immediately fail</span> the session and forfeit your credits.
+                            <span className="text-white font-semibold">{t('deepLock.instantPenalty')}</span> {t('deepLock.instantPenaltyDesc')}
                         </p>
                     </div>
                     <div className="flex gap-3 text-xs">
@@ -50,7 +53,7 @@ export function DeepLockDisclaimer({ onConfirm, onCancel }: DeepLockDisclaimerPr
                             <Check className="w-3 h-3 text-red-500" />
                         </div>
                         <p className="text-zinc-300">
-                            <span className="text-white font-semibold">Liability Waiver:</span> Locked In is not liable for any lost work, system interruptions, or missed notifications during this time.
+                            <span className="text-white font-semibold">{t('deepLock.liabilityWaiver')}</span> {t('deepLock.liabilityWaiverDesc')}
                         </p>
                     </div>
                 </div>
@@ -60,21 +63,22 @@ export function DeepLockDisclaimer({ onConfirm, onCancel }: DeepLockDisclaimerPr
                         onClick={onConfirm}
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
                     >
-                        I AGREE - LOCK ME IN
+                        {t('deepLock.agreeButton')}
                     </Button>
                     <Button
                         variant="ghost"
                         onClick={onCancel}
                         className="w-full text-zinc-500 hover:text-white hover:bg-zinc-800 h-12 rounded-xl"
                     >
-                        Nevermind, I&apos;m not ready
+                        {t('deepLock.cancelButton')}
                     </Button>
                 </div>
 
                 <p className="text-[10px] text-zinc-600 text-center uppercase tracking-widest font-semibold">
-                    Protecting our asses since 2025
+                    {t('deepLock.footer')}
                 </p>
             </motion.div>
         </div>
     )
 }
+
