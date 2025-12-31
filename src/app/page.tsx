@@ -370,7 +370,7 @@ export default function Home() {
       if (url) window.location.href = url
     } catch (e) {
       console.error("Guest checkout error", e)
-      alert("Failed to initiate guest checkout.")
+      alert(`Failed to initiate guest checkout: ${e instanceof Error ? e.message : "Unknown error"}`)
     }
   }
 
