@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -35,6 +36,9 @@ import { ClerkProvider } from "@clerk/nextjs";
 
 // ... imports
 
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { AnalyticsTracker } from "@/components/analytics/AnalyticsTracker";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -42,11 +46,16 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en">
+      <html lang="en" suppressHydrationWarning>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          suppressHydrationWarning
         >
+          <Suspense fallback={null}>
+            <AnalyticsTracker />
+          </Suspense>
           {children}
+          <SpeedInsights />
         </body>
       </html>
     </ClerkProvider>

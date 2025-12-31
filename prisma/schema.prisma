@@ -18,7 +18,17 @@ model User {
   updatedAt DateTime @updatedAt
 
   transactions Transaction[]
-  sessions     Session[]
+  sessions     FocusSession[]
+  feedback     Feedback[]
+}
+
+model Feedback {
+  id        String   @id @default(cuid())
+  userId    String?  // Optional for guest feedback
+  message   String
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
 }
 
 model Transaction {
@@ -32,7 +42,7 @@ model Transaction {
   user User @relation(fields: [userId], references: [id])
 }
 
-model Session {
+model FocusSession {
   id            String    @id @default(cuid())
   userId        String
   intent        String
@@ -45,6 +55,7 @@ model Session {
   aiBlockedApps String[]
   aiTips        String[]
   cost          Int       // in cents
+  mode          String    @default("strict") // "strict" | "flexible"
 
   user User @relation(fields: [userId], references: [id])
 }
@@ -58,4 +69,22 @@ enum TransactionType {
   PURCHASE // Buying credits via Stripe
   USAGE    // Spending credits on a session
   BONUS    // Free credits (if any)
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  url       String
+  path      String
+  referrer  String?
+  country   String?
+  device    String?  // "mobile", "tablet", "desktop"
+  browser   String?
+  os        String?
+  visitorId String   // Hashed user identifier
+  userId    String?  // Optional link if authenticated
+  createdAt DateTime @default(now())
+
+  @@index([path])
+  @@index([visitorId])
+  @@index([createdAt])
 }

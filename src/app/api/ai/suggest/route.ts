@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import OpenAI from "openai"
+import { GoogleGenerativeAI } from "@google/generative-ai"
 import { auth } from "@clerk/nextjs/server"
 
 export const dynamic = "force-dynamic"
@@ -12,7 +12,7 @@ export interface AISuggestion {
 }
 
 export async function POST(req: NextRequest) {
-    const apiKey = process.env.OPENAI_API_KEY
+    const apiKey = process.env.GEMINI_API_KEY
     let intent = "Focus Session"
 
     try {
@@ -22,11 +22,9 @@ export async function POST(req: NextRequest) {
         console.error("[AI_SUGGEST] Failed to parse request body:", e)
     }
 
-    // Use Mock only if API key is missing or clearly a dummy
-    if (!apiKey || apiKey === "dummy_key_for_build" || !apiKey.startsWith("sk-")) {
-        // Simulate a small delay for "AI thinking" effect
+    // Fallback Mock if no key
+    if (!apiKey || apiKey === "dummy_key_for_build") {
         await new Promise(resolve => setTimeout(resolve, 1500))
-
         const mockSuggestion: AISuggestion = {
             approach: [
                 `Clarify the core objective of "${intent}"`,
@@ -42,13 +40,8 @@ export async function POST(req: NextRequest) {
                 "Keep a glass of water nearby to stay hydrated."
             ]
         }
-
         return NextResponse.json(mockSuggestion)
     }
-
-    const openai = new OpenAI({
-        apiKey: apiKey,
-    })
 
     try {
         const { userId } = await auth()
@@ -56,62 +49,54 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
-        if (!intent || typeof intent !== "string") {
-            return NextResponse.json({ error: "Invalid intent" }, { status: 400 })
+        const genAI = new GoogleGenerativeAI(apiKey)
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" })
+
+        const prompt = `
+        You are a productivity assistant helping users focus on their tasks.
+        The user's intent is: "${intent}".
+        
+        Provide a JSON response with the following schema:
+        {
+            "approach": ["step 1", "step 2", "step 3", "step 4"], // 3-5 specific steps
+            "blockedApps": ["App1", "App2"], // List of apps/sites to avoid
+            "estimatedDuration": 45, // Number of minutes (integer)
+            "tips": ["Tip 1", "Tip 2"] // 2-3 specific focus tips
         }
+        
+        Return ONLY valid JSON.
+        `
 
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [
-                {
-                    role: "system",
-                    content: `You are a productivity assistant helping users focus on their tasks. 
-Given a task/intent, provide actionable suggestions in JSON format with:
-- approach: array of 3-5 specific steps to accomplish the task
-- blockedApps: array of apps/websites that should be blocked during focus (e.g., "Instagram", "Twitter", "YouTube")
-- estimatedDuration: suggested duration in minutes (15-120)
-- tips: array of 2-3 focus tips specific to this task
+        const result = await model.generateContent(prompt)
+        const response = await result.response
+        let text = response.text()
 
-Be concise and practical. Focus on productivity and deep work principles.`
-                },
-                {
-                    role: "user",
-                    content: `Task: ${intent}`
-                }
-            ],
-            response_format: { type: "json_object" },
-            temperature: 0.7,
-        })
+        // Clean up markdown code blocks if present
+        text = text.replace(/```json/g, "").replace(/```/g, "").trim()
 
-        const suggestion = JSON.parse(completion.choices[0].message.content || "{}")
+        const suggestion = JSON.parse(text)
 
         return NextResponse.json(suggestion as AISuggestion)
+
     } catch (error: any) {
-        console.error("[AI_SUGGEST] Error:", error)
+        console.error("[AI_SUGGEST] Gemini Error:", error)
 
-        // Transparent fallback to mock data if quota exceeded or other API errors
-        if (error.status === 429 || error.code === 'insufficient_quota' || error.message?.includes('insufficient_quota')) {
-            const mockSuggestion: AISuggestion = {
-                approach: [
-                    `Clarify the core objective of "${intent}"`,
-                    "Set up a dedicated workspace without distractions",
-                    "Break the task into 15-minute high-intensity sprints",
-                    "Review progress and adjust approach if needed"
-                ],
-                blockedApps: ["Instagram", "Twitter", "YouTube", "Discord"],
-                estimatedDuration: 45,
-                tips: [
-                    "Turn off all non-essential notifications.",
-                    "Use the Pomodoro technique (25m work / 5m break).",
-                    "Keep a glass of water nearby to stay hydrated."
-                ]
-            }
-            return NextResponse.json(mockSuggestion)
+        // Fallback to mock on error
+        const mockSuggestion: AISuggestion = {
+            approach: [
+                `Clarify the core objective of "${intent}"`,
+                "Set up a dedicated workspace without distractions",
+                "Break the task into 15-minute high-intensity sprints",
+                "Review progress and adjust approach if needed"
+            ],
+            blockedApps: ["Instagram", "Twitter", "YouTube", "Discord"],
+            estimatedDuration: 45,
+            tips: [
+                "Turn off all non-essential notifications.",
+                "Use the Pomodoro technique (25m work / 5m break).",
+                "Keep a glass of water nearby to stay hydrated."
+            ]
         }
-
-        return NextResponse.json(
-            { error: "Failed to generate suggestions" },
-            { status: 500 }
-        )
+        return NextResponse.json(mockSuggestion)
     }
 }

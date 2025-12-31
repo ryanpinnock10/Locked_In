@@ -11,7 +11,7 @@ async function getUserStats() {
             }
         }
     })
-    const activeUsersToday = await prisma.session.groupBy({
+    const activeUsersToday = await prisma.focusSession.groupBy({
         by: ['userId'],
         where: {
             startTime: {

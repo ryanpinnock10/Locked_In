@@ -6,8 +6,10 @@ import { motion } from "framer-motion"
 import { Plus, Wallet as WalletIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { useTranslation } from "react-i18next"
 
 export function Wallet() {
+    const { t } = useTranslation()
     const [balance, setBalance] = useState<number | null>(null)
     const [loading, setLoading] = useState(true)
     const searchParams = useSearchParams()
@@ -17,14 +19,31 @@ export function Wallet() {
         fetchBalance()
 
         // If we just came back from a successful checkout, 
-        // fetch again after a short delay to account for webhook latency
+        // poll every 3 seconds for 30 seconds or until balance updates
         if (success === "true") {
-            const timer = setTimeout(() => {
-                fetchBalance()
-            }, 2000)
-            return () => clearTimeout(timer)
+            const startBalance = balance;
+            let checkCount = 0;
+            const maxChecks = 10; // 30 seconds total
+
+            const interval = setInterval(async () => {
+                checkCount++;
+                const res = await fetch("/api/user/balance")
+                if (res.ok) {
+                    const data = await res.json()
+                    if (data.balance !== startBalance && startBalance !== null) {
+                        setBalance(data.balance)
+                        clearInterval(interval)
+                    }
+                }
+
+                if (checkCount >= maxChecks) {
+                    clearInterval(interval)
+                }
+            }, 3000)
+
+            return () => clearInterval(interval)
         }
-    }, [success])
+    }, [success, balance])
 
     const fetchBalance = async () => {
         try {
@@ -52,7 +71,7 @@ export function Wallet() {
     const [customValue, setCustomValue] = useState("500") // $500 default for custom
 
     const handleCheckout = async () => {
-        const amount = isCustom ? parseFloat(customValue || "0") * 100 : selectedAmount
+        const amount = isCustom ? Math.round(parseFloat(customValue || "0") * 100) : selectedAmount
         if (isNaN(amount) || amount < 100) {
             alert("Please enter a valid amount (minimum $1.00)")
             return
@@ -92,7 +111,7 @@ export function Wallet() {
                     <div className="space-y-1">
                         <div className="flex items-center gap-2 text-zinc-400 text-sm uppercase tracking-widest">
                             <WalletIcon className="w-4 h-4" />
-                            <span>Wallet Balance</span>
+                            <span>{t('dashboard.walletBalance')}</span>
                         </div>
                         <div className="text-3xl font-bold font-mono text-white">
                             {loading ? (
@@ -129,7 +148,7 @@ export function Wallet() {
                                     : "text-zinc-400 hover:text-white"
                                     }`}
                             >
-                                Custom
+                                {t('dashboard.custom')}
                             </button>
                         </div>
 
@@ -146,6 +165,8 @@ export function Wallet() {
                                         value={customValue}
                                         onChange={(e) => setCustomValue(e.target.value)}
                                         placeholder="0.00"
+                                        step="0.01"
+                                        min="1"
                                         className="w-full bg-zinc-900 border border-zinc-800 rounded-lg py-1.5 pl-6 pr-3 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
                                     />
                                 </div>
@@ -159,7 +180,7 @@ export function Wallet() {
                         onClick={handleCheckout}
                     >
                         <Plus className="w-5 h-5 mr-2" />
-                        Add {isCustom ? `$${customValue || '0'}` : `$${selectedAmount / 100}`} Credits
+                        {t('dashboard.addCredits')} ({isCustom ? `$${parseFloat(customValue || '0').toFixed(2)}` : `$${(selectedAmount / 100).toFixed(2)}`})
                     </Button>
                 </div>
             </div>

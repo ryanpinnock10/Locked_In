@@ -3,23 +3,27 @@ import { auth, currentUser } from "@clerk/nextjs/server"
 import { stripe } from "@/lib/stripe"
 import prisma from "@/lib/prisma"
 
-const settingsUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001"
-
 export async function POST(req: Request) {
     try {
         const { userId } = await auth()
         const user = await currentUser()
-        const { amount } = await req.json()
+        const { amount, isGuest, redirectParams } = await req.json()
 
-        if (!userId || !user) {
+        // Dynamic URL based on request origin (fixes localhost port issues)
+        const origin = req.headers.get("origin")
+        const settingsUrl = origin || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+
+        if (!isGuest && (!userId || !user)) {
             console.error("[STRIPE_CHECKOUT] Unauthorized: Missing userId or user")
             return NextResponse.json({ error: "Unauthorized. Please sign in again." }, { status: 401 })
         }
 
-        // Validate amount (minimum $5.00 / 500 cents)
-        if (!amount || typeof amount !== 'number' || amount < 500) {
+        // Validate amount (minimum $0.50 / 50 cents) - Lowered for cheap sessions?
+        const amountCents = Math.round(Number(amount))
+        // Stripe min is ~50 cents
+        if (!amountCents || typeof amountCents !== 'number' || amountCents < 50) {
             console.error("[STRIPE_CHECKOUT] Invalid amount:", amount)
-            return NextResponse.json({ error: "Invalid amount. Minimum is $5.00." }, { status: 400 })
+            return NextResponse.json({ error: "Invalid amount. Minimum is $0.50." }, { status: 400 })
         }
 
         // 1. Create Checkout Session
@@ -30,20 +34,23 @@ export async function POST(req: Request) {
                     price_data: {
                         currency: "usd",
                         product_data: {
-                            name: `${amount / 100} Focus Credits`,
-                            description: `Load $${amount / 100}.00 into your wallet`,
+                            name: isGuest ? "Locked In Session" : `${amountCents / 100} Focus Credits`,
+                            description: isGuest
+                                ? "Pay-per-session access (No account required)"
+                                : `Load $${(amountCents / 100).toFixed(2)} into your wallet`,
                         },
-                        unit_amount: amount,
+                        unit_amount: amountCents,
                     },
                     quantity: 1,
                 },
             ],
             mode: "payment",
-            success_url: `${settingsUrl}/?success=true`,
+            success_url: `${settingsUrl}/?success=true${isGuest ? '&guest=true' : ''}${redirectParams ? `&${redirectParams}` : ''}`,
             cancel_url: `${settingsUrl}/?canceled=true`,
             metadata: {
-                userId: userId, // Pass Clerk User ID to webhook
-                credits: amount.toString()
+                userId: userId || "", // Empty for guests
+                credits: amountCents.toString(),
+                isGuest: isGuest ? "true" : "false"
             }
         })
 

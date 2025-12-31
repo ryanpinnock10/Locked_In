@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
-        const sessions = await prisma.session.findMany({
+        const sessions = await prisma.focusSession.findMany({
             where: { userId },
             orderBy: { startTime: "desc" }
         })

@@ -1,0 +1,53 @@
+name: Deployment Checks
+
+on:
+  push:
+    branches: [ main, feature/* ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          DATABASE_URL: "postgresql://postgres:password@localhost:5432/postgres"
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: "postgresql://postgres:password@localhost:5432/postgres"
+
+      - name: Run Linting
+        run: npm run lint
+
+      # We can skip a dedicated type-check script if 'npm run build' covers it, 
+      # but running build is the best holistic check.
+      
+      - name: Build Project
+        run: npm run build
+        env:
+          # Add CI dummy values for build-time env vars if validation is strictly required. 
+          # Next.js builds often need access to env vars even if not running the app.
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_dummy
+          CLERK_SECRET_KEY: sk_test_dummy
+          STRIPE_SECRET_KEY: sk_test_dummy
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_dummy
+          STRIPE_WEBHOOK_SECRET: whsec_dummy
+          NEXT_PUBLIC_SUPABASE_URL: https://dummy.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy
+          DATABASE_URL: "postgresql://postgres:password@localhost:5432/postgres" 
+          # Note: If your build strictly connects to DB, you may need a real connection or 'prisma generate' only. 
+          # 'prisma generate' works without DB connection.
