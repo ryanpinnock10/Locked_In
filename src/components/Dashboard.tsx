@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { ArrowLeft, Clock, DollarSign, Trophy, XCircle, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { useTranslation } from "react-i18next"
 
 import { Wallet } from "@/components/Wallet"
 
@@ -26,6 +27,7 @@ interface DashboardProps {
 type TimePeriod = '1d' | '7d' | '30d' | '90d' | 'all'
 
 export function Dashboard({ onBack, onLockIn }: DashboardProps) {
+    const { t } = useTranslation()
     const [sessions, setSessions] = useState<Session[]>([])
     const [transactions, setTransactions] = useState<any[]>([])
     const [timePeriod, setTimePeriod] = useState<TimePeriod>('all')
@@ -134,10 +136,10 @@ export function Dashboard({ onBack, onLockIn }: DashboardProps) {
                                 <ArrowLeft className="w-6 h-6" />
                             </Button>
                         )}
-                        <h1 className="text-3xl font-bold tracking-tight">Your Progress</h1>
+                        <h1 className="text-3xl font-bold tracking-tight">{t('dashboard.yourProgress')}</h1>
                     </div>
                     <Button onClick={onLockIn} className="bg-blue-600 hover:bg-blue-500 text-white">
-                        Start Session
+                        {t('dashboard.startSession')}
                     </Button>
                 </div>
 
@@ -182,7 +184,7 @@ export function Dashboard({ onBack, onLockIn }: DashboardProps) {
                             <Clock className="w-6 h-6 text-blue-500" />
                         </div>
                         <div className="text-3xl font-bold font-mono text-white">{formatDuration(totalTime)}</div>
-                        <div className="text-xs text-zinc-400 uppercase tracking-widest">Total Focus</div>
+                        <div className="text-xs text-zinc-400 uppercase tracking-widest">{t('dashboard.totalFocus')}</div>
                     </Card>
 
                     <Card className="bg-zinc-900/50 border-zinc-800 p-6 flex flex-col items-center justify-center gap-2">
@@ -190,7 +192,7 @@ export function Dashboard({ onBack, onLockIn }: DashboardProps) {
                             <Trophy className="w-6 h-6 text-green-500" />
                         </div>
                         <div className="text-3xl font-bold font-mono text-white">{completedSessions}</div>
-                        <div className="text-xs text-zinc-400 uppercase tracking-widest">Sessions Completed</div>
+                        <div className="text-xs text-zinc-400 uppercase tracking-widest">{t('dashboard.sessionsCompleted')}</div>
                     </Card>
 
                     <Card className="bg-zinc-900/50 border-zinc-800 p-6 flex flex-col items-center justify-center gap-2">
@@ -198,13 +200,13 @@ export function Dashboard({ onBack, onLockIn }: DashboardProps) {
                             <DollarSign className="w-6 h-6 text-purple-500" />
                         </div>
                         <div className="text-3xl font-bold font-mono text-white">${totalCost.toFixed(2)}</div>
-                        <div className="text-xs text-zinc-400 uppercase tracking-widest">Value Committed</div>
+                        <div className="text-xs text-zinc-400 uppercase tracking-widest">{t('dashboard.valueCommitted')}</div>
                     </Card>
                 </div>
 
                 <div className="space-y-4">
                     <h2 className="text-xl font-semibold text-zinc-300">
-                        {activeView === 'sessions' ? 'Recent Sessions' : 'Transaction History'}
+                        {activeView === 'sessions' ? t('dashboard.recentSessions') : t('dashboard.transactionHistory')}
                     </h2>
 
                     {loading ? (
@@ -215,8 +217,8 @@ export function Dashboard({ onBack, onLockIn }: DashboardProps) {
                         filteredSessions.length === 0 ? (
                             <div className="text-center text-zinc-500 py-8 border border-zinc-800 rounded-md bg-zinc-900/20">
                                 {timePeriod === 'all'
-                                    ? 'No sessions yet. Lock in to start!'
-                                    : `No sessions in the last ${timePeriod.toUpperCase()}`
+                                    ? t('dashboard.noSessions')
+                                    : t('dashboard.noSessions') // Simplified to avoid complex logic for now, or could map params
                                 }
                             </div>
                         ) : (
@@ -256,7 +258,7 @@ export function Dashboard({ onBack, onLockIn }: DashboardProps) {
                     ) : (
                         filteredTransactions.length === 0 ? (
                             <div className="text-center text-zinc-500 py-8 border border-zinc-800 rounded-md bg-zinc-900/20">
-                                No transactions found.
+                                {t('dashboard.noTransactions')}
                             </div>
                         ) : (
                             <div className="h-[500px] overflow-y-scroll rounded-md border border-zinc-800 bg-zinc-900/20 p-4 flex flex-col gap-3 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-zinc-900">

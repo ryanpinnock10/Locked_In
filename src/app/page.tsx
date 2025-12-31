@@ -1018,7 +1018,7 @@ export default function Home() {
                         {t('dashboard.cost')}: <span className="text-white font-bold">${((duration[0] * pricePerMinute * (lockMode === 'flexible' ? 3 : 1)) / 100).toFixed(2)}</span>
                         {lockMode === 'flexible' && <span className="ml-1 text-blue-400 text-[10px] uppercase font-bold tracking-wider">({t('modes.multiplier')})</span>}
                         <br />
-                        <span className="opacity-50">if you fail. $0 if you succeed.</span>
+                        <span className="opacity-50">{t('dashboard.ifFail')}</span>
                       </p>
                     </div>
                   </div>
@@ -1077,7 +1077,7 @@ export default function Home() {
                     </div>
 
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-zinc-400">Remaining After</span>
+                      <span className="text-zinc-400">{t('dashboard.remainingAfter')}</span>
                       <span className={`font-mono font-bold ${(balance || 0) - (duration[0] * pricePerMinute) < 0 ? "text-red-400" : "text-zinc-300"
                         }`}>
                         {balance !== null
@@ -1090,7 +1090,7 @@ export default function Home() {
                   <div className="space-y-3 pt-4 border-t border-zinc-800">
                     <div className="flex items-center gap-3 text-sm text-zinc-400 bg-zinc-900/50 p-3 rounded-lg border border-zinc-800/50">
                       <ShieldCheck className="w-4 h-4 text-green-500 shrink-0" />
-                      <span>Triple confirmation required to unlock early.</span>
+                      <span>{t('dashboard.securityConf')}</span>
                     </div>
                   </div>
 

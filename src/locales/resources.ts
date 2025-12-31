@@ -44,7 +44,22 @@ export const resources = {
                 guestDashboard: "Track Your Progress",
                 guestDesc: "Dashboards are for members only. Sign up to verify your sessions, track history, and rank on the leaderboard.",
                 createAccount: "Create Account",
-                goBack: "Go Back"
+                goBack: "Go Back",
+                ifFail: "if you fail. $0 if you succeed.",
+                remainingAfter: "Remaining After",
+                securityConf: "Triple confirmation required to unlock early.",
+                yourProgress: "Your Progress",
+                startSession: "Start Session",
+                recentSessions: "Recent Sessions",
+                transactionHistory: "Transaction History",
+                noSessions: "No sessions yet. Lock in to start!",
+                noTransactions: "No transactions found.",
+                totalFocus: "Total Focus",
+                sessionsCompleted: "Sessions Completed",
+                valueCommitted: "Value Committed",
+                walletBalance: "Wallet Balance",
+                custom: "Custom",
+                addCredits: "Add Credits"
             },
             modes: {
                 strict: "Strict",
@@ -57,6 +72,25 @@ export const resources = {
                 admin: "Admin",
                 signIn: "Sign In",
                 signUp: "Sign Up"
+            },
+            lockScreen: {
+                intentLabel: "LOCKED IN ON",
+                extend: "Extend (+15m)",
+                emergencyUnlock: "Emergency Unlock",
+                controlTip: "Triple-tap lock to control"
+            },
+            deepLock: {
+                title: "Enter Deep Lock-In?",
+                description: "This mode is designed for extreme focus. By confirming, you agree to the following:",
+                strictFullscreen: "Strict Fullscreen:",
+                strictFullscreenDesc: "Your browser will expand to fill the screen. Leaving fullscreen fails the session.",
+                instantPenalty: "Instant Penalty:",
+                instantPenaltyDesc: "Switching tabs or apps will immediately fail the session and forfeit your credits.",
+                liabilityWaiver: "Liability Waiver:",
+                liabilityWaiverDesc: "Locked In is not liable for any lost work, system interruptions, or missed notifications during this time.",
+                agreeButton: "I AGREE - LOCK ME IN",
+                cancelButton: "Nevermind, I'm not ready",
+                footer: "Protecting our asses since 2025"
             }
         }
     },
@@ -105,7 +139,22 @@ export const resources = {
                 guestDashboard: "追踪你的进度",
                 guestDesc: "仪表板仅限会员。注册以验证会话，追踪历史并由排行榜。",
                 createAccount: "创建账户",
-                goBack: "返回"
+                goBack: "返回",
+                ifFail: "若失败。若成功则$0。",
+                remainingAfter: "剩余余额",
+                securityConf: "提前解锁需要三重确认。",
+                yourProgress: "你的进度",
+                startSession: "开始会话",
+                recentSessions: "最近会话",
+                transactionHistory: "交易历史",
+                noSessions: "暂无会话。立即锁定！",
+                noTransactions: "未找到交易。",
+                totalFocus: "总专注时间",
+                sessionsCompleted: "完成会话",
+                valueCommitted: "承诺价值",
+                walletBalance: "钱包余额",
+                custom: "自定义",
+                addCredits: "充值"
             },
             modes: {
                 strict: "严格",
@@ -118,6 +167,25 @@ export const resources = {
                 admin: "管理员",
                 signIn: "登录",
                 signUp: "注册"
+            },
+            lockScreen: {
+                intentLabel: "正在专注于",
+                extend: "延长 (+15分钟)",
+                emergencyUnlock: "紧急解锁",
+                controlTip: "轻击锁图标三次以控制"
+            },
+            deepLock: {
+                title: "进入深度专注模式？",
+                description: "此模式专为极限专注设计。确认即表示您同意以下内容：",
+                strictFullscreen: "强制全屏：",
+                strictFullscreenDesc: "浏览器将全屏显示。退出全屏会导致会话失败。",
+                instantPenalty: "即时惩罚：",
+                instantPenaltyDesc: "切换标签页或应用将导致会话立即失败并没收积分。",
+                liabilityWaiver: "免责声明：",
+                liabilityWaiverDesc: "Locked In 不对在此期间丢失的工作、系统中断或错过的通知负责。",
+                agreeButton: "我同意 - 锁定我",
+                cancelButton: "算了，我还没准备好",
+                footer: "自2025年起为您保驾护航"
             }
         }
     },
@@ -166,7 +234,22 @@ export const resources = {
                 guestDashboard: "追蹤你的進度",
                 guestDesc: "儀表板僅限會員。註冊以驗證會話，追蹤歷史並查看排行榜。",
                 createAccount: "創建帳戶",
-                goBack: "返回"
+                goBack: "返回",
+                ifFail: "若失敗。若成功則$0。",
+                remainingAfter: "剩餘餘額",
+                securityConf: "提前解鎖需要三重確認。",
+                yourProgress: "你的進度",
+                startSession: "開始會話",
+                recentSessions: "最近會話",
+                transactionHistory: "交易歷史",
+                noSessions: "暫無會話。立即鎖定！",
+                noTransactions: "未找到交易。",
+                totalFocus: "總專注時間",
+                sessionsCompleted: "完成會話",
+                valueCommitted: "承諾價值",
+                walletBalance: "錢包餘額",
+                custom: "自定義",
+                addCredits: "充值"
             },
             modes: {
                 strict: "嚴格",
@@ -179,6 +262,25 @@ export const resources = {
                 admin: "管理員",
                 signIn: "登錄",
                 signUp: "註冊"
+            },
+            lockScreen: {
+                intentLabel: "正在專注於",
+                extend: "延長 (+15分鐘)",
+                emergencyUnlock: "緊急解鎖",
+                controlTip: "輕擊鎖圖示三次以控制"
+            },
+            deepLock: {
+                title: "進入深度專注模式？",
+                description: "此模式專為極限專注設計。確認即表示您同意以下內容：",
+                strictFullscreen: "強制全螢幕：",
+                strictFullscreenDesc: "瀏覽器將全螢幕顯示。退出全螢幕會導致會話失敗。",
+                instantPenalty: "即時懲罰：",
+                instantPenaltyDesc: "切換標籤頁或應用程式將導致會話立即失敗並沒收積分。",
+                liabilityWaiver: "免責聲明：",
+                liabilityWaiverDesc: "Locked In 不對在此期間丟失的工作、系統中斷或錯過的通知負責。",
+                agreeButton: "我同意 - 鎖定我",
+                cancelButton: "算了，我還沒準備好",
+                footer: "自2025年起為您保駕護航"
             }
         }
     },
@@ -227,7 +329,22 @@ export const resources = {
                 guestDashboard: "Sigue Tu Progreso",
                 guestDesc: "Regístrate para verificar sesiones y ver el historial.",
                 createAccount: "Crear Cuenta",
-                goBack: "Volver"
+                goBack: "Volver",
+                ifFail: "si fallas. $0 si tienes éxito.",
+                remainingAfter: "Restante Después",
+                securityConf: "Se requiere triple confirmación para desbloquear antes.",
+                yourProgress: "Tu Progreso",
+                startSession: "Iniciar Sesión",
+                recentSessions: "Sesiones Recientes",
+                transactionHistory: "Historial de Transacciones",
+                noSessions: "No hay sesiones aún. ¡Bloquea para empezar!",
+                noTransactions: "No se encontraron transacciones.",
+                totalFocus: "Enfoque Total",
+                sessionsCompleted: "Sesiones Completadas",
+                valueCommitted: "Valor Comprometido",
+                walletBalance: "Saldo de Billetera",
+                custom: "Personalizado",
+                addCredits: "Añadir Créditos"
             },
             modes: {
                 strict: "Estricto",
@@ -240,6 +357,25 @@ export const resources = {
                 admin: "Admin",
                 signIn: "Iniciar Sesión",
                 signUp: "Registrarse"
+            },
+            lockScreen: {
+                intentLabel: "ENFOCADO EN",
+                extend: "Extender (+15m)",
+                emergencyUnlock: "Desbloqueo de Emergencia",
+                controlTip: "Toca el candado tres veces para controlar"
+            },
+            deepLock: {
+                title: "¿Entrar en Deep Lock-In?",
+                description: "Este modo está diseñado para un enfoque extremo. Al confirmar, aceptas lo siguiente:",
+                strictFullscreen: "Pantalla Completa Estricta:",
+                strictFullscreenDesc: "Tu navegador se expandirá. Salir de pantalla completa falla la sesión.",
+                instantPenalty: "Penalización Instantánea:",
+                instantPenaltyDesc: "Cambiar de pestaña o aplicación fallará la sesión inmediatamente y perderás tus créditos.",
+                liabilityWaiver: "Renuncia de Responsabilidad:",
+                liabilityWaiverDesc: "Locked In no se hace responsable por trabajo perdido, interrupciones o notificaciones perdidas.",
+                agreeButton: "ACEPTO - BLOQUÉAME",
+                cancelButton: "No importa, no estoy listo",
+                footer: "Protegiendo nuestros traseros desde 2025"
             }
         }
     },
@@ -288,7 +424,22 @@ export const resources = {
                 guestDashboard: "अपनी प्रगति ट्रैक करें",
                 guestDesc: "डैशबोर्ड केवल सदस्यों के लिए हैं। साइन अप करें।",
                 createAccount: "खाता बनाएं",
-                goBack: "वापस जाएं"
+                goBack: "वापस जाएं",
+                ifFail: "यदि आप असफल होते हैं। $0 यदि आप सफल होते हैं।",
+                remainingAfter: "के बाद शेष",
+                securityConf: "जल्दी अनलॉक करने के लिए तीन बार पुष्टि आवश्यक है।",
+                yourProgress: "आपकी प्रगति",
+                startSession: "सत्र शुरू करें",
+                recentSessions: "हालिया सत्र",
+                transactionHistory: "लेन-देन इतिहास",
+                noSessions: "अभी तक कोई सत्र नहीं। शुरू करने के लिए लॉक करें!",
+                noTransactions: "कोई लेन-देन नहीं मिला।",
+                totalFocus: "कुल फोकस",
+                sessionsCompleted: "सत्र पूरे हुए",
+                valueCommitted: "प्रतिबद्ध मूल्य",
+                walletBalance: "वॉलेट बैलेंस",
+                custom: "कस्टम",
+                addCredits: "क्रेडिट जोड़ें"
             },
             modes: {
                 strict: "सख्त",
@@ -301,6 +452,25 @@ export const resources = {
                 admin: "व्यवस्थापक",
                 signIn: "साइन इन",
                 signUp: "साइन अप"
+            },
+            lockScreen: {
+                intentLabel: "इस पर लॉक किया गया",
+                extend: "विस्तार (+15 मिनट)",
+                emergencyUnlock: "आपातकालीन अनलॉक",
+                controlTip: "नियंत्रित करने के लिए लॉक को तीन बार टैप करें"
+            },
+            deepLock: {
+                title: "दीप लॉक-इन में प्रवेश करें?",
+                description: "यह मोड अत्यधिक फोकस के लिए बनाया गया है। पुष्टि करके, आप निम्नलिखित से सहमत हैं:",
+                strictFullscreen: "सख्त पूर्ण स्क्रीन:",
+                strictFullscreenDesc: "आपका ब्राउज़र स्क्रीन को भरने के लिए विस्तारित होगा। पूर्ण स्क्रीन छोड़ने से सत्र विफल हो जाता है।",
+                instantPenalty: "तत्काल दंड:",
+                instantPenaltyDesc: "टैब या ऐप बदलने से सत्र तुरंत विफल हो जाएगा और आप अपने क्रेडिट खो देंगे।",
+                liabilityWaiver: "दायित्व की छूट:",
+                liabilityWaiverDesc: "Locked In इस समय के दौरान किसी भी खोए हुए काम, सिस्टम रुकावट या छूटी हुई सूचनाओं के लिए उत्तरदायी नहीं है।",
+                agreeButton: "मैं सहमत हूँ - मुझे लॉक करें",
+                cancelButton: "रहने दो, मैं तैयार नहीं हूँ",
+                footer: "2025 से हमारी रक्षा कर रहा है"
             }
         }
     },
@@ -349,7 +519,22 @@ export const resources = {
                 guestDashboard: "Suivez Vos Progrès",
                 guestDesc: "Inscrivez-vous pour vérifier vos sessions et voir l'historique.",
                 createAccount: "Créer un Compte",
-                goBack: "Retour"
+                goBack: "Retour",
+                ifFail: "si vous échouez. 0$ si vous réussissez.",
+                remainingAfter: "Restant Après",
+                securityConf: "Triple confirmation requise pour déverrouiller plus tôt.",
+                yourProgress: "Votre Progression",
+                startSession: "Démarrer Session",
+                recentSessions: "Sessions Récentes",
+                transactionHistory: "Historique des Transactions",
+                noSessions: "Aucune session. Verrouillez pour commencer !",
+                noTransactions: "Aucune transaction trouvée.",
+                totalFocus: "Focus Total",
+                sessionsCompleted: "Sessions Terminées",
+                valueCommitted: "Valeur Engagée",
+                walletBalance: "Solde",
+                custom: "Personnalisé",
+                addCredits: "Ajouter Crédits"
             },
             modes: {
                 strict: "Strict",
@@ -362,6 +547,25 @@ export const resources = {
                 admin: "Admin",
                 signIn: "Connexion",
                 signUp: "Inscription"
+            },
+            lockScreen: {
+                intentLabel: "VERROUILLÉ SUR",
+                extend: "Prolonger (+15m)",
+                emergencyUnlock: "Déverrouillage d'Urgence",
+                controlTip: "Touchez trois fois le cadenas pour contrôler"
+            },
+            deepLock: {
+                title: "Entrer en Deep Lock-In ?",
+                description: "Ce mode est conçu pour une concentration extrême. En confirmant, vous acceptez ce qui suit :",
+                strictFullscreen: "Plein Écran Strict :",
+                strictFullscreenDesc: "Votre navigateur s'étendra. Quitter le plein écran fait échouer la session.",
+                instantPenalty: "Pénalité Instantanée :",
+                instantPenaltyDesc: "Changer d'onglet ou d'application fera échouer la session immédiatement et vous perdrez vos crédits.",
+                liabilityWaiver: "Clause de Non-Responsabilité :",
+                liabilityWaiverDesc: "Locked In n'est pas responsable du travail perdu, des interruptions système ou des notifications manquées.",
+                agreeButton: "J'ACCEPTE - VERROUILLEZ-MOI",
+                cancelButton: "Non, je ne suis pas prêt",
+                footer: "Protège nos arrières depuis 2025"
             }
         }
     },
@@ -410,7 +614,22 @@ export const resources = {
                 guestDashboard: "تتبع تقدمك",
                 guestDesc: "لوحات المعلومات للأعضاء فقط. سجل للتحقق من جلساتك.",
                 createAccount: "إنشاء حساب",
-                goBack: "رجوع"
+                goBack: "رجوع",
+                ifFail: "إذا فشلت. $0 إذا نجحت.",
+                remainingAfter: "المتبقي بعد",
+                securityConf: "مطلوب تأكيد ثلاثي لفتح القفل مبكراً.",
+                yourProgress: "تقدمك",
+                startSession: "بدء الجلسة",
+                recentSessions: "الجلسات الأخيرة",
+                transactionHistory: "سجل المعاملات",
+                noSessions: "لا توجد جلسات بعد. اقفل لتبدأ!",
+                noTransactions: "لم يتم العثور على معاملات.",
+                totalFocus: "إجمالي التركيز",
+                sessionsCompleted: "الجلسات المكتملة",
+                valueCommitted: "القيمة الملتزمة",
+                walletBalance: "رصيد المحفظة",
+                custom: "مخصص",
+                addCredits: "إضافة رصيد"
             },
             modes: {
                 strict: "صارم",
@@ -423,6 +642,25 @@ export const resources = {
                 admin: "مسؤول",
                 signIn: "دخول",
                 signUp: "تسجيل"
+            },
+            lockScreen: {
+                intentLabel: "مُركّز على",
+                extend: "تمديد (+15 دقيقة)",
+                emergencyUnlock: "فتح الطوارئ",
+                controlTip: "اضغط ثلاث مرات للتحكم"
+            },
+            deepLock: {
+                title: "الدخول في القفل العميق؟",
+                description: "هذا الوضع مصمم للتركيز الشديد. بالتأكيد، أنت توافق على ما يلي:",
+                strictFullscreen: "ملء الشاشة الصارم:",
+                strictFullscreenDesc: "سيتوسع متصفحك. مغادرة ملء الشاشة يفشل الجلسة.",
+                instantPenalty: "عقوبة فورية:",
+                instantPenaltyDesc: "تبديل علامات التبويب أو التطبيقات سيفشل الجلسة فوراً ويصادر أرصدتك.",
+                liabilityWaiver: "إخلاء المسؤولية:",
+                liabilityWaiverDesc: "Locked In غير مسؤول عن أي عمل مفقود أو انقطاع النظام أو إشعارات فائتة.",
+                agreeButton: "أوافق - اقفل علي",
+                cancelButton: "لا يهم، لست مستعداً",
+                footer: "نحمي ظهورنا منذ 2025"
             }
         }
     },
@@ -471,7 +709,22 @@ export const resources = {
                 guestDashboard: "আপনার অগ্রগতি ট্র্যাক করুন",
                 guestDesc: "ড্যাশবোর্ড শুধুমাত্র সদস্যদের জন্য। সাইন আপ করুন।",
                 createAccount: "অ্যাকাউন্ট তৈরি করুন",
-                goBack: "ফিরে যান"
+                goBack: "ফিরে যান",
+                ifFail: "যদি আপনি ব্যর্থ হন। $0 যদি আপনি সফল হন।",
+                remainingAfter: "অবশিষ্ট",
+                securityConf: "তাড়াতাড়ি আনলক করতে তিনবার নিশ্চিতকরণ প্রয়োজন।",
+                yourProgress: "আপনার অগ্রগতি",
+                startSession: "সেশন শুরু করুন",
+                recentSessions: "সাম্প্রতিক সেশন",
+                transactionHistory: "লেনদেন ইতিহাস",
+                noSessions: "এখনও কোন সেশন নেই। শুরু করতে লক করুন!",
+                noTransactions: "কোন লেনদেন পাওয়া যায়নি।",
+                totalFocus: "মোট ফোকাস",
+                sessionsCompleted: "সম্পন্ন সেশন",
+                valueCommitted: "প্রতিশ্রুত মূল্য",
+                walletBalance: "ওয়ালেট ব্যালেন্স",
+                custom: "কাস্টম",
+                addCredits: "ক্রেডিট যোগ করুন"
             },
             modes: {
                 strict: "কঠোর",
@@ -484,6 +737,25 @@ export const resources = {
                 admin: "অ্যাডমিন",
                 signIn: "সাইন ইন",
                 signUp: "সাইন আপ"
+            },
+            lockScreen: {
+                intentLabel: "লক করা হয়েছে",
+                extend: "বাড়ান (+১৫ মি)",
+                emergencyUnlock: "জরুরি আনলক",
+                controlTip: "নিয়ন্ত্রণ করতে লকে তিনবার ট্যাপ করুন"
+            },
+            deepLock: {
+                title: "গভীর লক-ইন প্রবেশ করবেন?",
+                description: "এই মোডটি চরম ফোকাসের জন্য ডিজাইন করা হয়েছে। নিশ্চিত করে, আপনি নিম্নলিখিত বিষয়গুলিতে সম্মত হন:",
+                strictFullscreen: "কঠোর ফুলস্ক্রিন:",
+                strictFullscreenDesc: "আপনার ব্রাউজার স্ক্রিন পূর্ণ করবে। ফুলস্ক্রিন ছাড়লে সেশন ব্যর্থ হবে।",
+                instantPenalty: "তাৎক্ষণিক জরিমানা:",
+                instantPenaltyDesc: "ট্যাব বা অ্যাপ পরিবর্তন করলে সেশন অবিলম্বে ব্যর্থ হবে এবং আপনার ক্রেডিট হারাবেন।",
+                liabilityWaiver: "দায় মওকুফ:",
+                liabilityWaiverDesc: "Locked In এই সময়ে হারানো কাজ, সিস্টেম বিভ্রাট বা মিস করা বিজ্ঞপ্তির জন্য দায়ী নয়।",
+                agreeButton: "আমি সম্মত - আমাকে লক করুন",
+                cancelButton: "থাক, আমি প্রস্তুত নই",
+                footer: "২০২৫ সাল থেকে আমাদের রক্ষা করছে"
             }
         }
     },
@@ -532,7 +804,22 @@ export const resources = {
                 guestDashboard: "Отслеживайте прогресс",
                 guestDesc: "Регистрируйтесь, чтобы сохранять историю.",
                 createAccount: "Создать аккаунт",
-                goBack: "Назад"
+                goBack: "Назад",
+                ifFail: "если провалите. $0 если преуспеете.",
+                remainingAfter: "Остаток после",
+                securityConf: "Тройное подтверждение для разблокировки.",
+                yourProgress: "Ваш прогресс",
+                startSession: "Начать сессию",
+                recentSessions: "Недавние сессии",
+                transactionHistory: "История транзакций",
+                noSessions: "Сессий пока нет. Заблокируйте, чтобы начать!",
+                noTransactions: "Транзакции не найдены.",
+                totalFocus: "Всего фокуса",
+                sessionsCompleted: "Завершено сессий",
+                valueCommitted: "Вложенная ценность",
+                walletBalance: "Баланс кошелька",
+                custom: "Свой",
+                addCredits: "Пополнить"
             },
             modes: {
                 strict: "Строгий",
@@ -545,6 +832,25 @@ export const resources = {
                 admin: "Админ",
                 signIn: "Войти",
                 signUp: "Регистрация"
+            },
+            lockScreen: {
+                intentLabel: "ЗАБЛОКИРОВАНО НА",
+                extend: "Продлить (+15м)",
+                emergencyUnlock: "Экстренная Разблокировка",
+                controlTip: "Тройное нажатие для управления"
+            },
+            deepLock: {
+                title: "Войти в Глубокий Блок?",
+                description: "Этот режим для экстремального фокуса. Подтверждая, вы соглашаетесь:",
+                strictFullscreen: "Строгий Полноэкранный Режим:",
+                strictFullscreenDesc: "Браузер раскроется на весь экран. Выход из него прервет сессию.",
+                instantPenalty: "Мгновенный Штраф:",
+                instantPenaltyDesc: "Смена вкладки или окна немедленно завершит сессию провалом.",
+                liabilityWaiver: "Отказ от Ответственности:",
+                liabilityWaiverDesc: "Locked In не несет ответственности за потерянную работу или уведомления.",
+                agreeButton: "СОГЛАСЕН - БЛОКИРУЙ",
+                cancelButton: "Нет, я не готов",
+                footer: "Защищаем наши задницы с 2025"
             }
         }
     },
@@ -593,7 +899,22 @@ export const resources = {
                 guestDashboard: "Acompanhe seu Progresso",
                 guestDesc: "Inscreva-se para verificar sessões e ver histórico.",
                 createAccount: "Criar Conta",
-                goBack: "Voltar"
+                goBack: "Voltar",
+                ifFail: "se falhar. $0 se tiver sucesso.",
+                remainingAfter: "Restante Após",
+                securityConf: "Confirmação tripla necessária para desbloquear antes.",
+                yourProgress: "Seu Progresso",
+                startSession: "Iniciar Sessão",
+                recentSessions: "Sessões Recentes",
+                transactionHistory: "Histórico de Transações",
+                noSessions: "Nenhuma sessão ainda.",
+                noTransactions: "Nenhuma transação encontrada.",
+                totalFocus: "Foco Total",
+                sessionsCompleted: "Sessões Completas",
+                valueCommitted: "Valor Comprometido",
+                walletBalance: "Saldo da Carteira",
+                custom: "Personalizado",
+                addCredits: "Adicionar Créditos"
             },
             modes: {
                 strict: "Estrito",
@@ -606,6 +927,25 @@ export const resources = {
                 admin: "Admin",
                 signIn: "Entrar",
                 signUp: "Inscrever-se"
+            },
+            lockScreen: {
+                intentLabel: "FOCADO EM",
+                extend: "Estender (+15m)",
+                emergencyUnlock: "Desbloqueio de Emergência",
+                controlTip: "Toque três vezes no cadeado para controlar"
+            },
+            deepLock: {
+                title: "Entrar no Deep Lock-In?",
+                description: "Este modo é para foco extremo. Ao confirmar, você concorda:",
+                strictFullscreen: "Tela Cheia Estrita:",
+                strictFullscreenDesc: "Seu navegador expandirá. Sair da tela cheia falha a sessão.",
+                instantPenalty: "Penalidade Instantânea:",
+                instantPenaltyDesc: "Trocar de aba ou app falhará a sessão imediatamente e perderá seus créditos.",
+                liabilityWaiver: "Isenção de Responsabilidade:",
+                liabilityWaiverDesc: "Locked In não se responsabiliza por trabalho perdido ou interrupções.",
+                agreeButton: "CONCORDO - ME BLOQUEIE",
+                cancelButton: "Deixa pra lá, não estou pronto",
+                footer: "Protegendo nossos traseiros desde 2025"
             }
         }
     },
@@ -654,7 +994,22 @@ export const resources = {
                 guestDashboard: "اپنی پیشرفت کو ٹریک کریں",
                 guestDesc: "ڈیش بورڈ صرف ممبروں کے لیے ہیں۔ سائن اپ کریں۔",
                 createAccount: "اکاؤنٹ بنائیں",
-                goBack: "پیچھے جائیں"
+                goBack: "پیچھے جائیں",
+                ifFail: "اگر آپ ناکام ہو جاتے ہیں۔ $0 اگر آپ کامیاب ہو جاتے ہیں۔",
+                remainingAfter: "باقی بعد میں",
+                securityConf: "جلدی انلاک کرنے کے لیے تین بار تصدیق ضروری ہے۔",
+                yourProgress: "آپ کی پیشرفت",
+                startSession: "سیشن شروع کریں",
+                recentSessions: "حالیہ سیشنز",
+                transactionHistory: "لین دین کی تاریخ",
+                noSessions: "ابھی تک کوئی سیشن نہیں۔ شروع کرنے کے لیے لاک کریں!",
+                noTransactions: "کوئی لین دین نہیں ملا۔",
+                totalFocus: "کل فوکس",
+                sessionsCompleted: "مکمل شدہ سیشنز",
+                valueCommitted: "عہد کردہ قدر",
+                walletBalance: "والٹ بیلنس",
+                custom: "حسب ضرورت",
+                addCredits: "کریڈٹ شامل کریں"
             },
             modes: {
                 strict: "سخت",
@@ -667,6 +1022,25 @@ export const resources = {
                 admin: "ایڈمن",
                 signIn: "سائن ان",
                 signUp: "سائن اپ"
+            },
+            lockScreen: {
+                intentLabel: "سمگل کر دیا گیا",
+                extend: "بڑھائیں (+15 منٹ)",
+                emergencyUnlock: "ایمرجنسی انلاک",
+                controlTip: "کنٹرول کرنے کے لیے لاک کو تین بار تھپتھپائیں"
+            },
+            deepLock: {
+                title: "ڈیپ لاک ان میں داخل ہوں؟",
+                description: "یہ موڈ شدید توجہ کے لیے ہے۔ تصدیق کرکے، آپ مندرجہ ذیل سے اتفاق کرتے ہیں:",
+                strictFullscreen: "سخت فل سکرین:",
+                strictFullscreenDesc: "آپ کا براؤزر پھیل جائے گا۔ فل سکرین چھوڑنے سے سیشن ناکام ہو جاتا ہے۔",
+                instantPenalty: "فوری جرمانہ:",
+                instantPenaltyDesc: "ٹیبز یا ایپس کو تبدیل کرنے سے سیشن فوری طور پر ناکام ہو جائے گا۔",
+                liabilityWaiver: "ذمہ داری کی چھوٹ:",
+                liabilityWaiverDesc: "Locked In کسی بھی کھوئے ہوئے کام کا ذمہ دار نہیں ہے۔",
+                agreeButton: "میں متفق ہوں - مجھے لاک کریں",
+                cancelButton: "کوئی بات نہیں، میں تیار نہیں ہوں",
+                footer: "2025 سے ہماری حفاظت کر رہا ہے"
             }
         }
     },
@@ -715,7 +1089,22 @@ export const resources = {
                 guestDashboard: "Lacak Kemajuan Anda",
                 guestDesc: "Daftar untuk memverifikasi sesi dan melihat riwayat.",
                 createAccount: "Buat Akun",
-                goBack: "Kembali"
+                goBack: "Kembali",
+                ifFail: "jika gagal. $0 jika sukses.",
+                remainingAfter: "Sisa Setelah",
+                securityConf: "Konfirmasi tiga kali diperlukan untuk membuka lebih awal.",
+                yourProgress: "Kemajuan Anda",
+                startSession: "Mulai Sesi",
+                recentSessions: "Sesi Terakhir",
+                transactionHistory: "Riwayat Transaksi",
+                noSessions: "Belum ada sesi. Kunci untuk memulai!",
+                noTransactions: "Transaksi tidak ditemukan.",
+                totalFocus: "Total Fokus",
+                sessionsCompleted: "Sesi Selesai",
+                valueCommitted: "Nilai Berkomitmen",
+                walletBalance: "Saldo Dompet",
+                custom: "Kustom",
+                addCredits: "Tambah Kredit"
             },
             modes: {
                 strict: "Ketat",
@@ -728,6 +1117,25 @@ export const resources = {
                 admin: "Admin",
                 signIn: "Masuk",
                 signUp: "Daftar"
+            },
+            lockScreen: {
+                intentLabel: "TERKUNCI PADA",
+                extend: "Perpanjang (+15m)",
+                emergencyUnlock: "Buka Kunci Darurat",
+                controlTip: "Ketuk kunci tiga kali untuk kontrol"
+            },
+            deepLock: {
+                title: "Masuk ke Deep Lock-In?",
+                description: "Mode ini untuk fokus ekstrem. Dengan mengonfirmasi, Anda setuju:",
+                strictFullscreen: "Layar Penuh Ketat:",
+                strictFullscreenDesc: "Browser Anda akan melebar. Keluar dari layar penuh menggagalkan sesi.",
+                instantPenalty: "Penalti Instan:",
+                instantPenaltyDesc: "Pindah tab atau aplikasi akan langsung menggagalkan sesi dan menghanguskan kredit.",
+                liabilityWaiver: "Pelepasan Tanggung Jawab:",
+                liabilityWaiverDesc: "Locked In tidak bertanggung jawab atas pekerjaan yang hilang atau gangguan sistem.",
+                agreeButton: "SAYA SETUJU - KUNCI SAYA",
+                cancelButton: "Tidak jadi, saya belum siap",
+                footer: "Melindungi pantat kami sejak 2025"
             }
         }
     },
@@ -776,7 +1184,22 @@ export const resources = {
                 guestDashboard: "Verfolge deinen Fortschritt",
                 guestDesc: "Registriere dich, um Sitzungen zu verifizieren.",
                 createAccount: "Konto erstellen",
-                goBack: "Zurück"
+                goBack: "Zurück",
+                ifFail: "wenn du scheiterst. 0$, wenn du Erfolg hast.",
+                remainingAfter: "Verbleibend nach",
+                securityConf: "Dreifache Bestätigung erforderlich zum Entsperren.",
+                yourProgress: "Dein Fortschritt",
+                startSession: "Sitzung Starten",
+                recentSessions: "Letzte Sitzungen",
+                transactionHistory: "Transaktionsverlauf",
+                noSessions: "Noch keine Sitzungen.",
+                noTransactions: "Keine Transaktionen gefunden.",
+                totalFocus: "Gesamtfokus",
+                sessionsCompleted: "Abgeschlossene Sitzungen",
+                valueCommitted: "Eingesetzter Wert",
+                walletBalance: "Guthaben",
+                custom: "Benutzerdefiniert",
+                addCredits: "Guthaben Aufladen"
             },
             modes: {
                 strict: "Strikt",
@@ -789,6 +1212,25 @@ export const resources = {
                 admin: "Admin",
                 signIn: "Anmelden",
                 signUp: "Registrieren"
+            },
+            lockScreen: {
+                intentLabel: "FOKUSSIERT AUF",
+                extend: "Verlängern (+15m)",
+                emergencyUnlock: "Notfall-Freigabe",
+                controlTip: "Dreimal auf das Schloss tippen zur Steuerung"
+            },
+            deepLock: {
+                title: "Deep Lock-In betreten?",
+                description: "Dieser Modus ist für extremen Fokus. Mit der Bestätigung stimmst du zu:",
+                strictFullscreen: "Strikter Vollbildmodus:",
+                strictFullscreenDesc: "Dein Browser wird maximiert. Das Verlassen des Vollbilds lässt die Sitzung scheitern.",
+                instantPenalty: "Sofortige Strafe:",
+                instantPenaltyDesc: "Tab- oder App-Wechsel führt zum sofortigen Scheitern und Verlust der Credits.",
+                liabilityWaiver: "Haftungsausschluss:",
+                liabilityWaiverDesc: "Locked In haftet nicht für verlorene Arbeit oder Systemunterbrechungen.",
+                agreeButton: "ICH STIMME ZU - SPERRT MICH EIN",
+                cancelButton: "Lieber nicht, ich bin nicht bereit",
+                footer: "Wir schützen unsere Hintern seit 2025"
             }
         }
     },
@@ -837,7 +1279,22 @@ export const resources = {
                 guestDashboard: "進捗を追跡",
                 guestDesc: "ダッシュボードはメンバー専用です。登録して履歴を確認してください。",
                 createAccount: "アカウント作成",
-                goBack: "戻る"
+                goBack: "戻る",
+                ifFail: "失敗した場合。成功すれば$0。",
+                remainingAfter: "残高（予想）",
+                securityConf: "早期解除には3回の確認が必要です。",
+                yourProgress: "進捗状況",
+                startSession: "セッション開始",
+                recentSessions: "最近のセッション",
+                transactionHistory: "取引履歴",
+                noSessions: "セッションはまだありません。",
+                noTransactions: "取引が見つかりません。",
+                totalFocus: "総集中時間",
+                sessionsCompleted: "完了したセッション",
+                valueCommitted: "コミット額",
+                walletBalance: "ウォレット残高",
+                custom: "カスタム",
+                addCredits: "クレジット追加"
             },
             modes: {
                 strict: "厳格",
@@ -850,6 +1307,25 @@ export const resources = {
                 admin: "管理者",
                 signIn: "サインイン",
                 signUp: "サインアップ"
+            },
+            lockScreen: {
+                intentLabel: "ロック中：",
+                extend: "延長 (+15分)",
+                emergencyUnlock: "緊急解除",
+                controlTip: "ロックを3回タップして操作"
+            },
+            deepLock: {
+                title: "ディープロックインに入りますか？",
+                description: "このモードは極限の集中のためのものです。確認することで、以下に同意したことになります：",
+                strictFullscreen: "厳格な全画面：",
+                strictFullscreenDesc: "ブラウザが全画面になります。全画面を解除するとセッションは失敗します。",
+                instantPenalty: "即時ペナルティ：",
+                instantPenaltyDesc: "タブやアプリを切り替えると即座にセッションが失敗し、クレジットを失います。",
+                liabilityWaiver: "免責事項：",
+                liabilityWaiverDesc: "Locked In は、作業の損失やシステムの中断について責任を負いません。",
+                agreeButton: "同意してロックする",
+                cancelButton: "やめておく",
+                footer: "2025年からお尻を守っています"
             }
         }
     },
@@ -898,7 +1374,22 @@ export const resources = {
                 guestDashboard: "İlerlemenizi Takip Edin",
                 guestDesc: "Kayıt olun ve geçmişinizi görün.",
                 createAccount: "Hesap Oluştur",
-                goBack: "Geri Git"
+                goBack: "Geri Git",
+                ifFail: "başarısız olursanız. Başarılı olursanız $0.",
+                remainingAfter: "Kalan Bakiye",
+                securityConf: "Erken kilit açmak için üçlü onay gerekir.",
+                yourProgress: "İlerlemeniz",
+                startSession: "Oturumu Başlat",
+                recentSessions: "Son Oturumlar",
+                transactionHistory: "İşlem Geçmişi",
+                noSessions: "Henüz oturum yok. Başlamak için kilitleyin!",
+                noTransactions: "İşlem bulunamadı.",
+                totalFocus: "Toplam Odak",
+                sessionsCompleted: "Tamamlanan Oturumlar",
+                valueCommitted: "Taahhüt Edilen Değer",
+                walletBalance: "Cüzdan Bakiyesi",
+                custom: "Özel",
+                addCredits: "Kredi Ekle"
             },
             modes: {
                 strict: "Katı",
@@ -911,6 +1402,25 @@ export const resources = {
                 admin: "Yönetici",
                 signIn: "Giriş Yap",
                 signUp: "Kayıt Ol"
+            },
+            lockScreen: {
+                intentLabel: "KİLİTLENDİ",
+                extend: "Uzat (+15dk)",
+                emergencyUnlock: "Acil Kilit Açma",
+                controlTip: "Kontrol etmek için kilide üç kez dokunun"
+            },
+            deepLock: {
+                title: "Derin Kili'de Gir?",
+                description: "Bu mod aşırı odaklanma içindir. Onaylayarak, aşağıdakileri kabul edersiniz:",
+                strictFullscreen: "Katı Tam Ekran:",
+                strictFullscreenDesc: "Tarayıcınız genişleyecek. Tam ekrandan çıkmak oturumu başarısız kılar.",
+                instantPenalty: "Anında Ceza:",
+                instantPenaltyDesc: "Sekme veya uygulama değiştirmek oturumu anında başarısız kılar ve kredilerinizi kaybedersiniz.",
+                liabilityWaiver: "Sorumluluk Reddi:",
+                liabilityWaiverDesc: "Locked In, kayıp iş veya sistem kesintilerinden sorumlu değildir.",
+                agreeButton: "KABUL EDİYORUM - BENİ KİLİTLE",
+                cancelButton: "Boşver, hazır değilim",
+                footer: "2025'ten beri arkamızı koruyoruz"
             }
         }
     },
@@ -959,7 +1469,22 @@ export const resources = {
                 guestDashboard: "진행 상황 추적",
                 guestDesc: "회원가입 후 기록을 확인하세요.",
                 createAccount: "계정 생성",
-                goBack: "뒤로 가기"
+                goBack: "뒤로 가기",
+                ifFail: "실패 시. 성공하면 $0.",
+                remainingAfter: "예상 잔액",
+                securityConf: "조기 잠금 해제를 위해 3번의 확인이 필요합니다.",
+                yourProgress: "진행 상황",
+                startSession: "세션 시작",
+                recentSessions: "최근 세션",
+                transactionHistory: "거래 내역",
+                noSessions: "아직 세션이 없습니다. 시작하려면 잠그세요!",
+                noTransactions: "거래를 찾을 수 없습니다.",
+                totalFocus: "총 집중 시간",
+                sessionsCompleted: "완료된 세션",
+                valueCommitted: "약정 가치",
+                walletBalance: "지갑 잔액",
+                custom: "사용자 지정",
+                addCredits: "크레딧 추가"
             },
             modes: {
                 strict: "엄격",
@@ -972,6 +1497,25 @@ export const resources = {
                 admin: "관리자",
                 signIn: "로그인",
                 signUp: "가입"
+            },
+            lockScreen: {
+                intentLabel: "잠금 중:",
+                extend: "연장 (+15분)",
+                emergencyUnlock: "긴급 잠금 해제",
+                controlTip: "잠금을 세 번 탭하여 제어"
+            },
+            deepLock: {
+                title: "딥 락인에 진입하시겠습니까?",
+                description: "이 모드는 극단적인 집중을 위해 설계되었습니다. 확인하면 다음 사항에 동의하게 됩니다:",
+                strictFullscreen: "엄격한 전체 화면:",
+                strictFullscreenDesc: "브라우저가 전체 화면으로 확장됩니다. 전체 화면을 나가면 세션이 실패합니다.",
+                instantPenalty: "즉시 페널티:",
+                instantPenaltyDesc: "탭이나 앱을 전환하면 즉시 세션이 실패하고 크레딧을 잃게 됩니다.",
+                liabilityWaiver: "책임 면제:",
+                liabilityWaiverDesc: "Locked In은 이 시간 동안 발생한 작업 손실이나 시스템 중단에 대해 책임을 지지 않습니다.",
+                agreeButton: "동의합니다 - 잠궈주세요",
+                cancelButton: "아니요, 아직 준비되지 않았습니다",
+                footer: "2025년부터 우리의 엉덩이를 보호하고 있습니다"
             }
         }
     }

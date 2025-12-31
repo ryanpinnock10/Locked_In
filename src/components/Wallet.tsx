@@ -6,8 +6,10 @@ import { motion } from "framer-motion"
 import { Plus, Wallet as WalletIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { useTranslation } from "react-i18next"
 
 export function Wallet() {
+    const { t } = useTranslation()
     const [balance, setBalance] = useState<number | null>(null)
     const [loading, setLoading] = useState(true)
     const searchParams = useSearchParams()
@@ -109,7 +111,7 @@ export function Wallet() {
                     <div className="space-y-1">
                         <div className="flex items-center gap-2 text-zinc-400 text-sm uppercase tracking-widest">
                             <WalletIcon className="w-4 h-4" />
-                            <span>Wallet Balance</span>
+                            <span>{t('dashboard.walletBalance')}</span>
                         </div>
                         <div className="text-3xl font-bold font-mono text-white">
                             {loading ? (
@@ -146,7 +148,7 @@ export function Wallet() {
                                     : "text-zinc-400 hover:text-white"
                                     }`}
                             >
-                                Custom
+                                {t('dashboard.custom')}
                             </button>
                         </div>
 
@@ -178,7 +180,7 @@ export function Wallet() {
                         onClick={handleCheckout}
                     >
                         <Plus className="w-5 h-5 mr-2" />
-                        Add {isCustom ? `$${parseFloat(customValue || '0').toFixed(2)}` : `$${(selectedAmount / 100).toFixed(2)}`} Credits
+                        {t('dashboard.addCredits')} ({isCustom ? `$${parseFloat(customValue || '0').toFixed(2)}` : `$${(selectedAmount / 100).toFixed(2)}`})
                     </Button>
                 </div>
             </div>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { AnimatedLock } from "@/components/AnimatedLock"
+import { useTranslation } from "react-i18next"
 
 interface LockScreenProps {
     timeLeft: number
@@ -17,6 +18,7 @@ interface LockScreenProps {
 }
 
 export function LockScreen({ timeLeft, totalDuration, onUnlock, onExtend, intent }: LockScreenProps) {
+    const { t } = useTranslation()
     const [isHoveringUnlock, setIsHoveringUnlock] = useState(false)
     const [showControls, setShowControls] = useState(false)
     const [clickCount, setClickCount] = useState(0)
@@ -70,7 +72,7 @@ export function LockScreen({ timeLeft, totalDuration, onUnlock, onExtend, intent
                         animate={{ opacity: 1, y: 0 }}
                         className="text-center space-y-2 pointer-events-auto"
                     >
-                        <span className="text-sm text-zinc-600 uppercase tracking-widest">LOCKED IN ON</span>
+                        <span className="text-sm text-zinc-600 uppercase tracking-widest">{t('lockScreen.intentLabel')}</span>
                         <h2 className="text-2xl font-bold text-white tracking-tight">{intent}</h2>
                     </motion.div>
                 )}
@@ -117,7 +119,7 @@ export function LockScreen({ timeLeft, totalDuration, onUnlock, onExtend, intent
                                         className="w-full bg-blue-600 hover:bg-blue-500 text-white"
                                         onClick={onExtend}
                                     >
-                                        Extend (+15m) - $1.50
+                                        {t('lockScreen.extend')} - $1.50
                                     </Button>
 
                                     <Button
@@ -129,7 +131,7 @@ export function LockScreen({ timeLeft, totalDuration, onUnlock, onExtend, intent
                                     >
                                         <span className="relative z-10 flex items-center gap-2 justify-center w-full">
                                             <Unlock className="w-4 h-4" />
-                                            Emergency Unlock
+                                            {t('lockScreen.emergencyUnlock')}
                                         </span>
                                         {isHoveringUnlock && (
                                             <motion.div
@@ -150,9 +152,10 @@ export function LockScreen({ timeLeft, totalDuration, onUnlock, onExtend, intent
 
             {!showControls && (
                 <div className="absolute bottom-8 text-zinc-800 text-xs uppercase tracking-widest select-none">
-                    Triple-tap lock to control
+                    {t('lockScreen.controlTip')}
                 </div>
             )}
         </div>
     )
 }
+

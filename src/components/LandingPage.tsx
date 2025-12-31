@@ -42,14 +42,18 @@ export function LandingPage({ onEnterApp }: { onEnterApp: () => void }) {
                         {t('hero.startGuest')}
                     </Button>
 
-                    <SignUpButton mode="modal">
-                        <Button
-                            size="lg"
-                            className="text-lg px-8 h-14 bg-white text-black hover:bg-zinc-200 transition-all"
-                        >
-                            {t('hero.signUp')}
-                        </Button>
-                    </SignUpButton>
+                    <div className="flex gap-4">
+                        <SignInButton mode="modal">
+                            <Button variant="ghost" className="text-zinc-400 hover:text-white">
+                                {t('common.signIn')}
+                            </Button>
+                        </SignInButton>
+                        <SignUpButton mode="modal">
+                            <Button className="bg-white text-black hover:bg-zinc-200">
+                                {t('common.signUp')}
+                            </Button>
+                        </SignUpButton>
+                    </div>
                 </div>
             </div>
 
