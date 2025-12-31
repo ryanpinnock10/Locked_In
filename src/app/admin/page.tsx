@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma"
 import { UserGrowthChart } from "@/components/admin/UserGrowthChart"
 import { RevenueChart } from "@/components/admin/RevenueChart"
 import { InsightsPanel } from "@/components/admin/InsightsPanel"
-import { GenerateReportButton } from "@/components/admin/GenerateReportButton"
+import { ThreatReport } from "@/components/admin/ThreatReport"
 
 async function getStats() {
     const totalUsers = await prisma.user.count()
@@ -62,7 +62,6 @@ async function getStats() {
     }
 
     // Insights Data
-    // Explicitly select fields. Note: 'mode' must be in schema.prisma and generated.
     const sessions = await prisma.session.findMany({
         where: { startTime: { gte: thirtyDaysAgo } },
         select: { duration: true, mode: true, status: true, intent: true }
@@ -73,7 +72,6 @@ async function getStats() {
         ? Math.round(sessions.reduce((acc, s) => acc + s.duration, 0) / totalSessionCount)
         : 0
 
-    // Safely access mode with default fallbacks if types act up
     const modeSplit = {
         strict: sessions.filter(s => s.mode === "strict").length,
         flexible: sessions.filter(s => s.mode === "flexible").length
@@ -84,7 +82,6 @@ async function getStats() {
         ? Math.round((completed / totalSessionCount) * 100)
         : 0
 
-    // Simple intent grouping
     const intentCounts: Record<string, number> = {}
     sessions.forEach(s => {
         const key = s.intent?.toLowerCase().trim() || "unknown"
@@ -100,9 +97,7 @@ async function getStats() {
         by: ['userId'],
         where: {
             type: "USAGE",
-            createdAt: {
-                gte: twentyFourHoursAgo
-            }
+            createdAt: { gte: twentyFourHoursAgo }
         }
     }).then(res => res.length)
 
@@ -139,7 +134,6 @@ export default async function AdminOverview() {
                     <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
                     <p className="text-zinc-200">Real-time performance metrics for Locked In.</p>
                 </div>
-                <GenerateReportButton />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -157,7 +151,8 @@ export default async function AdminOverview() {
                 })}
             </div>
 
-            {/* NEW INSIGHTS PANEL */}
+            <ThreatReport />
+
             <InsightsPanel
                 avgDuration={stats.insights.avgDuration}
                 modeSplit={stats.insights.modeSplit}
