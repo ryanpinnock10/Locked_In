@@ -781,7 +781,12 @@ export default function Home() {
                             Create Account
                           </Button>
                         </SignUpButton>
-                        <Button variant="outline" onClick={() => setActiveTab('lock-in')}>
+                        <Button
+                          variant="ghost"
+                          size="lg"
+                          onClick={() => setActiveTab('lock-in')}
+                          className="text-zinc-500 hover:text-white hover:bg-zinc-800"
+                        >
                           Go Back
                         </Button>
                       </div>

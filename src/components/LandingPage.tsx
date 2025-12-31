@@ -33,8 +33,7 @@ export function LandingPage({ onEnterApp }: { onEnterApp: () => void }) {
                     <SignUpButton mode="modal">
                         <Button
                             size="lg"
-                            variant="outline"
-                            className="text-lg px-8 h-14 border-zinc-700 hover:bg-zinc-800 transition-all"
+                            className="text-lg px-8 h-14 bg-white text-black hover:bg-zinc-200 transition-all"
                         >
                             Sign Up Free
                         </Button>
