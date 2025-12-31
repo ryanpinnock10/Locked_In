@@ -1,10 +1,13 @@
 import { Card } from "@/components/ui/card"
-import { Users, Clock, DollarSign, TrendingUp } from "lucide-react"
+import { Users, Clock, DollarSign, TrendingUp, Globe, Smartphone, BarChart3 } from "lucide-react"
 import prisma from "@/lib/prisma"
 import { UserGrowthChart } from "@/components/admin/UserGrowthChart"
 import { RevenueChart } from "@/components/admin/RevenueChart"
 import { InsightsPanel } from "@/components/admin/InsightsPanel"
 import { ThreatReport } from "@/components/admin/ThreatReport"
+import { VisitorChart } from "@/components/admin/VisitorChart"
+import { DeviceStats } from "@/components/admin/DeviceStats"
+import { CountryStats } from "@/components/admin/CountryStats"
 
 async function getStats() {
     const totalUsers = await prisma.user.count()
@@ -17,6 +20,65 @@ async function getStats() {
     })
 
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+
+    // Analytics Data
+    const analyticsEvents = await prisma.analyticsEvent.findMany({
+        where: { createdAt: { gte: thirtyDaysAgo } },
+        select: {
+            visitorId: true,
+            createdAt: true,
+            country: true,
+            device: true
+        }
+    })
+
+    // Process Visitors & PageViews by Day
+    const analyticsByDay: Record<string, { visitors: Set<string>, pageViews: number }> = {}
+    for (let i = 0; i < 30; i++) {
+        const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        analyticsByDay[date] = { visitors: new Set(), pageViews: 0 }
+    }
+
+    analyticsEvents.forEach(e => {
+        const date = e.createdAt.toISOString().split('T')[0]
+        if (analyticsByDay[date]) {
+            analyticsByDay[date].visitors.add(e.visitorId)
+            analyticsByDay[date].pageViews++
+        }
+    })
+
+    const visitorData = Object.entries(analyticsByDay).map(([date, data]) => ({
+        date,
+        visitors: data.visitors.size,
+        pageViews: data.pageViews
+    })).reverse()
+
+    // Process Countries
+    const countryCounts: Record<string, number> = {}
+    analyticsEvents.forEach(e => {
+        const c = e.country || "Unknown"
+        countryCounts[c] = (countryCounts[c] || 0) + 1
+    })
+    const countryData = Object.entries(countryCounts)
+        .map(([country, visitors]) => ({
+            country,
+            visitors,
+            percentage: analyticsEvents.length > 0 ? Math.round((visitors / analyticsEvents.length) * 100) : 0
+        }))
+        .sort((a, b) => b.visitors - a.visitors)
+        .slice(0, 10)
+
+    // Process Devices
+    const deviceCounts: Record<string, number> = {}
+    analyticsEvents.forEach(e => {
+        const d = e.device || "desktop"
+        deviceCounts[d] = (deviceCounts[d] || 0) + 1
+    })
+    const deviceData = Object.entries(deviceCounts).map(([name, value], index) => ({
+        name,
+        value,
+        color: ["#3b82f6", "#10b981", "#f59e0b", "#ef4444"][index % 4]
+    }))
 
     // Monthly stats for charts
     const usersByDay = await prisma.user.findMany({
@@ -62,7 +124,7 @@ async function getStats() {
     }
 
     // Insights Data
-    const sessions = await prisma.session.findMany({
+    const sessions = await prisma.focusSession.findMany({
         where: { startTime: { gte: thirtyDaysAgo } },
         select: { duration: true, mode: true, status: true, intent: true }
     })
@@ -108,6 +170,9 @@ async function getStats() {
         activeToday,
         userGrowthData: processUserGrowth(),
         revenueData: processRevenue(),
+        visitorData,
+        countryData,
+        deviceData,
         insights: {
             avgDuration,
             modeSplit,
@@ -159,6 +224,38 @@ export default async function AdminOverview() {
                 completionRate={stats.insights.completionRate}
                 topIntents={stats.insights.topIntents}
             />
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-4 lg:col-span-2">
+                    <div className="flex items-center gap-2">
+                        <BarChart3 className="w-5 h-5 text-zinc-400" />
+                        <h3 className="text-lg font-medium text-white">Web Traffic (Visitors & Pageviews)</h3>
+                    </div>
+                    <div className="h-80">
+                        <VisitorChart data={stats.visitorData} />
+                    </div>
+                </Card>
+
+                <div className="space-y-6">
+                    <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-4">
+                        <div className="flex items-center gap-2">
+                            <Smartphone className="w-5 h-5 text-zinc-400" />
+                            <h3 className="text-lg font-medium text-white">Devices</h3>
+                        </div>
+                        <div className="h-40">
+                            <DeviceStats data={stats.deviceData} />
+                        </div>
+                    </Card>
+
+                    <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-4">
+                        <div className="flex items-center gap-2">
+                            <Globe className="w-5 h-5 text-zinc-400" />
+                            <h3 className="text-lg font-medium text-white">Top Countries</h3>
+                        </div>
+                        <CountryStats data={stats.countryData} />
+                    </Card>
+                </div>
+            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-4">

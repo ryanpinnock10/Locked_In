@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
 
             for (const session of sessions) {
                 // Create the session record
-                await tx.session.create({
+                await tx.focusSession.create({
                     data: {
                         userId,
                         intent: session.intent,

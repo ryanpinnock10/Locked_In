@@ -3,12 +3,12 @@ import { Card } from "@/components/ui/card"
 import { Clock, CheckCircle, XCircle, Sparkles, Zap } from "lucide-react"
 
 async function getSessionStats() {
-    const totalSessions = await prisma.session.count()
-    const completedSessions = await prisma.session.count({ where: { status: 'completed' } })
-    const failedSessions = await prisma.session.count({ where: { status: 'failed' } })
-    const aiSessions = await prisma.session.count({ where: { aiSuggested: true } })
+    const totalSessions = await prisma.focusSession.count()
+    const completedSessions = await prisma.focusSession.count({ where: { status: 'completed' } })
+    const failedSessions = await prisma.focusSession.count({ where: { status: 'failed' } })
+    const aiSessions = await prisma.focusSession.count({ where: { aiSuggested: true } })
 
-    const recentSessions = await prisma.session.findMany({
+    const recentSessions = await prisma.focusSession.findMany({
         orderBy: { startTime: 'desc' },
         take: 15,
         include: {

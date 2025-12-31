@@ -15,7 +15,7 @@ async function main() {
     console.log(JSON.stringify(users, null, 2))
 
     console.log('--- Recent Sessions ---')
-    const sessions = await prisma.session.findMany({
+    const sessions = await prisma.focusSession.findMany({
         orderBy: { startTime: 'desc' },
         take: 5
     })

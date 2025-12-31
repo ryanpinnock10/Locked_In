@@ -26,7 +26,7 @@ export async function POST(req: Request) {
         // 1. Fetch Stats
         const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
 
-        const sessions = await prisma.session.findMany({
+        const sessions = await prisma.focusSession.findMany({
             where: { startTime: { gte: thirtyDaysAgo } },
             select: { status: true, duration: true, mode: true, cost: true }
         })
