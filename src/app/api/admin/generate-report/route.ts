@@ -49,8 +49,8 @@ export async function POST(req: NextRequest) {
 
         // 1. Gather Data
         const totalUsers = await prisma.user.count()
-        const totalSessions = await prisma.session.count()
-        const recentSessions = await prisma.session.findMany({
+        const totalSessions = await prisma.focusSession.count()
+        const recentSessions = await prisma.focusSession.findMany({
             take: 20,
             orderBy: { startTime: 'desc' },
             select: { intent: true, duration: true, mode: true, status: true }

@@ -3,16 +3,18 @@ import prisma from "@/lib/prisma"
 import { auth } from "@clerk/nextjs/server"
 
 interface SessionRequestBody {
-    intent: string
+    userId: string
+    intent?: string
     duration: number
-    cost: number
+    mode?: string
     aiSuggested?: boolean
     aiApproach?: string[]
     aiBlockedApps?: string[]
     aiTips?: string[]
-    mode?: "strict" | "flexible"
     sessionId?: string
     status?: string
+    success?: boolean
+    cost?: number
 }
 
 export async function POST(req: NextRequest) {
@@ -23,7 +25,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body: SessionRequestBody = await req.json()
-        const { intent, duration, cost, aiSuggested, aiApproach, aiBlockedApps, aiTips, mode } = body
+        const { intent, duration, cost = 0, aiSuggested, aiApproach, aiBlockedApps, aiTips, mode } = body
 
         console.log(`[SESSIONS_POST] Request from ${userId}: cost=${cost}, mode=${mode || 'strict'}`)
 
@@ -46,18 +48,16 @@ export async function POST(req: NextRequest) {
                 }
             })
 
-            const session = await tx.session.create({
+            const session = await tx.focusSession.create({
                 data: {
                     userId,
-                    intent: intent || "Focus Session",
                     duration,
-                    cost,
-                    mode: mode || "strict",
+                    intent: intent || "Focus Session",
                     status: "active",
-                    aiSuggested: !!aiSuggested,
-                    aiApproach: aiApproach || [],
-                    aiBlockedApps: aiBlockedApps || [],
-                    aiTips: aiTips || [],
+                    mode: mode || "strict", // Defaults to strict if not provided
+                    cost: 0,
+                    // In a real app, you'd calculate cost based on duration * rate
+                    // For now, we'll handle the transaction separately below
                 }
             })
 
@@ -91,16 +91,16 @@ export async function PATCH(req: NextRequest) {
         }
 
         const body: SessionRequestBody = await req.json()
-        const { sessionId, status } = body
+        const { sessionId, status, success } = body // Added 'success' to destructuring
 
         if (!sessionId || !status) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
         }
 
-        const session = await prisma.session.update({
-            where: { id: sessionId, userId },
+        const session = await prisma.focusSession.update({
+            where: { id: sessionId, userId }, // Keep userId for security
             data: {
-                status,
+                status: success ? "completed" : "failed", // Use 'success' to determine final status
                 endTime: new Date()
             }
         })
