@@ -23,6 +23,7 @@ export function LockScreen({ timeLeft, totalDuration, onUnlock, onExtend, intent
 
     const handleLockClick = () => {
         setClickCount(prev => {
+            console.log("Lock clicked. Count:", prev + 1)
             const newCount = prev + 1
             if (newCount >= 3) {
                 setShowControls(true)

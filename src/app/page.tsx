@@ -20,8 +20,13 @@ import Link from "next/link"
 import { FailureScreen } from "@/components/FailureScreen"
 import { SuccessScreen } from "@/components/SuccessScreen"
 import { useCallback } from "react"
+import { saveGuestSession, getGuestHistory, clearGuestHistory } from "@/lib/guest-history"
+import { useTranslation, Trans } from "react-i18next"
+import { LanguageSwitcher } from "@/components/LanguageSwitcher"
+import "@/lib/i18n"
 
 export default function Home() {
+  const { t } = useTranslation()
   const { isSignedIn, user } = useUser()
   const [balance, setBalance] = useState<number | null>(null)
 
@@ -103,6 +108,23 @@ export default function Home() {
   }, [])
 
   const saveSession = useCallback(async (status: 'completed' | 'failed') => {
+    // Handling for Guests (Local Storage)
+    if (!isSignedIn) {
+      const intent = localStorage.getItem("sessionIntent") || "Guest Session"
+      const totalDuration = parseInt(localStorage.getItem("totalDuration") || "0")
+      const cost = totalDuration * pricePerMinute * (lockMode === 'flexible' ? 3 : 1) / 60 // Calculate approx cost
+
+      saveGuestSession({
+        intent,
+        duration: Math.floor(totalDuration / 60), // Store in minutes
+        cost: Math.floor(cost),
+        status,
+        mode: lockMode,
+        completedAt: new Date().toISOString()
+      })
+      return
+    }
+
     const sessionId = localStorage.getItem("activeSessionId")
     if (!sessionId) return
 
@@ -116,7 +138,29 @@ export default function Home() {
     } catch (error) {
       console.error("Failed to save session", error)
     }
-  }, [])
+  }, [isSignedIn, pricePerMinute, lockMode])
+
+  // Effect: Sync Guest History on Sign In
+  useEffect(() => {
+    if (isSignedIn) {
+      const history = getGuestHistory()
+      if (history.length > 0) {
+        fetch("/api/user/sync-history", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessions: history })
+        })
+          .then(res => {
+            if (res.ok) {
+              clearGuestHistory()
+              // Optionally trigger a balance/data refetch here
+              window.location.reload() // Simple way to refresh dashboard data for now
+            }
+          })
+          .catch(err => console.error("Failed to sync guest history", err))
+      }
+    }
+  }, [isSignedIn])
 
   useEffect(() => {
     if (isSignedIn) {
@@ -341,6 +385,27 @@ export default function Home() {
     setShowDeepLockDisclaimer(true)
   }
 
+  const initiateGuestPayment = async (amountCents: number, redirectParams: string) => {
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: amountCents,
+          isGuest: true,
+          redirectParams
+        })
+      })
+
+      if (!res.ok) throw new Error("Checkout failed")
+      const { url } = await res.json()
+      if (url) window.location.href = url
+    } catch (e) {
+      console.error("Guest payment error", e)
+      alert(`Failed to initiate payment: ${e instanceof Error ? e.message : "Unknown error"}`)
+    }
+  }
+
   const handleGuestCheckout = async () => {
     const finalDuration = duration[0]
     const multiplier = lockMode === 'flexible' ? 3 : 1
@@ -355,23 +420,7 @@ export default function Home() {
     // Save mode preference for restoration
     localStorage.setItem("lockMode", lockMode)
 
-    try {
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: cost,
-          isGuest: true
-        })
-      })
-
-      if (!res.ok) throw new Error("Checkout failed")
-      const { url } = await res.json()
-      if (url) window.location.href = url
-    } catch (e) {
-      console.error("Guest checkout error", e)
-      alert(`Failed to initiate guest checkout: ${e instanceof Error ? e.message : "Unknown error"}`)
-    }
+    await initiateGuestPayment(cost, "")
   }
 
   const startGuestSession = useCallback(async (durationMinutes: number, sessionIntent: string) => {
@@ -413,14 +462,51 @@ export default function Home() {
       window.history.replaceState({}, '', window.location.pathname)
 
       if (isGuestParams) {
-        const pending = localStorage.getItem("pendingGuestSession")
-        if (pending) {
-          const { duration, intent } = JSON.parse(pending)
-          startGuestSession(duration, intent)
-          localStorage.removeItem("pendingGuestSession")
-          alert("Guest Session Started! Good luck.")
+        const action = params.get('action')
+
+        if (action === 'extend') {
+          // EXTEND SESSION LOGIC
+          const additionalSeconds = 15 * 60
+          const currentEndTime = parseInt(localStorage.getItem("targetEndTime") || "0")
+          const currentTotal = parseInt(localStorage.getItem("totalDuration") || "0")
+
+          if (currentEndTime > 0) {
+            const newEndTime = currentEndTime + additionalSeconds * 1000
+            const newTotal = currentTotal + additionalSeconds
+
+            localStorage.setItem("targetEndTime", newEndTime.toString())
+            localStorage.setItem("totalDuration", newTotal.toString())
+
+            setTotalDuration(newTotal)
+            const now = Date.now()
+            setTimeLeft(Math.max(0, Math.floor((newEndTime - now) / 1000)))
+
+            alert("Session Extended! +15 Minutes Added.")
+          } else {
+            alert("Could not extend: No active session found.")
+          }
+        } else if (action === 'unlock') {
+          // UNLOCK / PAID EXIT LOGIC
+          setIsLocked(false)
+          setShowUnlockFlow(false)
+          localStorage.removeItem("targetEndTime")
+          localStorage.removeItem("totalDuration")
+          localStorage.removeItem("sessionIntent")
+          if (document.fullscreenElement) document.exitFullscreen()
+          alert("Emergency Unlock Successful. You paid the price.")
         } else {
-          alert("Payment successful, but session details were lost.")
+          // DEFAULT: START NEW SESSION
+          const pending = localStorage.getItem("pendingGuestSession")
+          if (pending) {
+            const { duration, intent } = JSON.parse(pending)
+            startGuestSession(duration, intent)
+            localStorage.removeItem("pendingGuestSession")
+            alert("Guest Session Started! Good luck.")
+          } else {
+            if (!localStorage.getItem("activeSessionId")) {
+              alert("Payment successful, but session details were lost.")
+            }
+          }
         }
       } else {
         if (isSignedIn) {
@@ -522,6 +608,13 @@ export default function Home() {
     const additionalMinutes = 15
     const cost = 150 // $1.50 for 15 mins
 
+    // Guest Handling
+    // Guest Handling
+    if (!isSignedIn) {
+      alert("Extensions are for members only! Create an account to unlock this feature.")
+      return
+    }
+
     try {
       const res = await fetch("/api/user/transaction", {
         method: "POST",
@@ -566,16 +659,10 @@ export default function Home() {
   }
 
   const handlePayToUnlock = async () => {
-    // If guest, just unlock (no wallet to charge)
+    // If guest, redirect to payment to unlock ($5.00)
+    // If guest, redirect to payment to unlock ($5.00)
     if (!isSignedIn) {
-      setIsLocked(false)
-      setShowUnlockFlow(false)
-      localStorage.removeItem("targetEndTime")
-      localStorage.removeItem("totalDuration")
-      localStorage.removeItem("sessionIntent")
-      releaseWakeLock()
-      releaseKeyboardLock()
-      saveSession('failed')
+      alert("Guest sessions are binding by design! Create an account to enable Emergency Unlock.")
       return
     }
 
@@ -723,6 +810,7 @@ export default function Home() {
       <main className="min-h-screen bg-black text-white font-sans selection:bg-blue-500/30 relative">
         {/* Header: User Profile & Admin & Auth */}
         <div className="absolute top-4 right-4 z-30 flex gap-4 items-center">
+          <LanguageSwitcher />
           {isSignedIn && user?.primaryEmailAddress?.emailAddress === "ryanpinnock10@gmail.com" && (
             <Link href="/admin">
               <Button variant="outline" className="text-zinc-300 border-zinc-700 bg-black/50 hover:bg-zinc-800 flex items-center gap-2">
@@ -770,15 +858,15 @@ export default function Home() {
                         <ShieldCheck className="w-8 h-8 text-zinc-500" />
                       </div>
                       <div>
-                        <h2 className="text-2xl font-bold text-white mb-2">Track Your Progress</h2>
+                        <h2 className="text-2xl font-bold text-white mb-2">{t('dashboard.guestDashboard')}</h2>
                         <p className="text-zinc-400">
-                          Dashboards are for members only. Sign up to verify your sessions, track history, and rank on the leaderboard.
+                          {t('dashboard.guestDesc')}
                         </p>
                       </div>
                       <div className="flex gap-4 justify-center">
                         <SignUpButton mode="modal">
                           <Button size="lg" className="bg-white text-black hover:bg-zinc-200">
-                            Create Account
+                            {t('dashboard.createAccount')}
                           </Button>
                         </SignUpButton>
                         <Button
@@ -787,7 +875,7 @@ export default function Home() {
                           onClick={() => setActiveTab('lock-in')}
                           className="text-zinc-500 hover:text-white hover:bg-zinc-800"
                         >
-                          Go Back
+                          {t('dashboard.goBack')}
                         </Button>
                       </div>
                     </Card>
@@ -810,8 +898,8 @@ export default function Home() {
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-zinc-800/50 mb-4 ring-1 ring-zinc-700">
                       <Lock className="w-8 h-8 text-white" />
                     </div>
-                    <h1 className="text-3xl font-bold tracking-tighter text-white">Ready to Focus?</h1>
-                    <p className="text-zinc-400">Select your duration and lock in.</p>
+                    <h1 className="text-3xl font-bold tracking-tighter text-white">{t('dashboard.welcome')}</h1>
+                    <p className="text-zinc-400">{t('dashboard.subtitle')}</p>
                   </div>
 
                   <div className="space-y-6">
@@ -832,7 +920,7 @@ export default function Home() {
 
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
-                        <label className="text-sm font-medium text-zinc-300">I am locking in to...</label>
+                        <label className="text-sm font-medium text-zinc-300">{t('dashboard.lockingInTo')}</label>
                         {isSignedIn && (
                           <button
                             onClick={() => setShowAIAssistant(true)}
@@ -845,7 +933,7 @@ export default function Home() {
                       </div>
                       <input
                         type="text"
-                        placeholder="e.g. Finish the report"
+                        placeholder={t('dashboard.placeholder')}
                         value={intent}
                         onChange={(e) => setIntent(e.target.value)}
                         className="w-full bg-black/50 border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
@@ -856,7 +944,7 @@ export default function Home() {
                       <div className="flex justify-between items-center gap-4">
                         <label className="text-sm font-medium text-zinc-300 flex items-center gap-2">
                           <Clock className="w-4 h-4" />
-                          Duration (min)
+                          {t('dashboard.duration')}
                         </label>
                         <div className="relative group">
                           <Input
@@ -890,7 +978,7 @@ export default function Home() {
                       <div className="flex justify-between items-center gap-4">
                         <label className="text-sm font-medium text-zinc-300 flex items-center gap-2">
                           <span className="text-green-500">$</span>
-                          Base Wager / Minute (¢)
+                          {t('dashboard.wager')}
                           <button
                             onClick={() => alert("This is the base amount you wager per minute. In specific modes like 'Flexible', a multiplier may apply.")}
                             className="text-zinc-600 hover:text-zinc-400 transition-colors ml-1"
@@ -927,8 +1015,8 @@ export default function Home() {
                         <span>$1.00+</span>
                       </div>
                       <p className="text-xs text-center text-zinc-500">
-                        Total cost: <span className="text-white font-bold">${((duration[0] * pricePerMinute * (lockMode === 'flexible' ? 3 : 1)) / 100).toFixed(2)}</span>
-                        {lockMode === 'flexible' && <span className="ml-1 text-blue-400 text-[10px] uppercase font-bold tracking-wider">(3x Multiplier)</span>}
+                        {t('dashboard.cost')}: <span className="text-white font-bold">${((duration[0] * pricePerMinute * (lockMode === 'flexible' ? 3 : 1)) / 100).toFixed(2)}</span>
+                        {lockMode === 'flexible' && <span className="ml-1 text-blue-400 text-[10px] uppercase font-bold tracking-wider">({t('modes.multiplier')})</span>}
                         <br />
                         <span className="opacity-50">if you fail. $0 if you succeed.</span>
                       </p>
@@ -940,7 +1028,7 @@ export default function Home() {
                     {/* MODE TOGGLE */}
                     <div className="space-y-2">
                       <div className="flex justify-between items-center px-1">
-                        <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Lock Mode</span>
+                        <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">{t('dashboard.lockMode')}</span>
                         <button
                           onClick={() => setShowModeInfo(!showModeInfo)}
                           className="text-zinc-500 hover:text-white transition-colors"
@@ -951,8 +1039,8 @@ export default function Home() {
 
                       {showModeInfo && (
                         <div className="p-3 bg-zinc-900/80 rounded-lg border border-zinc-700 text-xs text-zinc-300 space-y-2 mb-2">
-                          <p><strong className="text-white">Strict:</strong> Classic mode. If you switch tabs or minimize, you fail immediately.</p>
-                          <p><strong className="text-blue-400">Flexible:</strong> Premium mode. Allows research (tab switching) without penalty. <span className="text-blue-300 font-bold">Costs 3x base wager.</span></p>
+                          <p><strong className="text-white">{t('modes.strict')}:</strong> {t('modes.strictDesc')}</p>
+                          <p><strong className="text-blue-400">{t('modes.flexible')}:</strong> {t('modes.flexibleDesc')} <span className="text-blue-300 font-bold">{t('modes.multiplier')}</span></p>
                         </div>
                       )}
 
@@ -962,27 +1050,27 @@ export default function Home() {
                           className={`flex-1 h-8 text-xs ${lockMode === 'strict' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
                           onClick={() => { setLockMode('strict'); localStorage.setItem("lockMode", 'strict') }}
                         >
-                          Strict (1x)
+                          {t('modes.strict')} (1x)
                         </Button>
                         <Button
                           variant="ghost"
                           className={`flex-1 h-8 text-xs ${lockMode === 'flexible' ? 'bg-zinc-800 text-blue-400 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
                           onClick={() => { setLockMode('flexible'); localStorage.setItem("lockMode", 'flexible') }}
                         >
-                          Flexible (3x)
+                          {t('modes.flexible')} (3x)
                         </Button>
                       </div>
                     </div>
 
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-zinc-400">Current Balance</span>
+                      <span className="text-zinc-400">{t('dashboard.balance')}</span>
                       <span className="font-mono text-zinc-300">
                         {balance !== null ? `$${(balance / 100).toFixed(2)}` : "..."}
                       </span>
                     </div>
 
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-zinc-400">Session Cost</span>
+                      <span className="text-sm text-zinc-400">{t('dashboard.cost')}</span>
                       <span className="text-xl font-bold text-green-400">
                         ${(duration[0] * pricePerMinute * (lockMode === 'flexible' ? 3 : 1) / 100).toFixed(2)}
                       </span>
@@ -1012,7 +1100,7 @@ export default function Home() {
                     onClick={handleLockIn}
                     disabled={!intent.trim()}
                   >
-                    Lock In Now
+                    {t('dashboard.lockInNow')}
                   </Button>
                 </Card >
 
