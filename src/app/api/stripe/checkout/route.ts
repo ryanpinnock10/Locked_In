@@ -3,13 +3,15 @@ import { auth, currentUser } from "@clerk/nextjs/server"
 import { stripe } from "@/lib/stripe"
 import prisma from "@/lib/prisma"
 
-const settingsUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001"
-
 export async function POST(req: Request) {
     try {
         const { userId } = await auth()
         const user = await currentUser()
         const { amount, isGuest } = await req.json()
+
+        // Dynamic URL based on request origin (fixes localhost port issues)
+        const origin = req.headers.get("origin")
+        const settingsUrl = origin || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
 
         if (!isGuest && (!userId || !user)) {
             console.error("[STRIPE_CHECKOUT] Unauthorized: Missing userId or user")
