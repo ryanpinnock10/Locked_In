@@ -7,7 +7,7 @@ export async function POST(req: Request) {
     try {
         const { userId } = await auth()
         const user = await currentUser()
-        const { amount, isGuest } = await req.json()
+        const { amount, isGuest, redirectParams } = await req.json()
 
         // Dynamic URL based on request origin (fixes localhost port issues)
         const origin = req.headers.get("origin")
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
                     price_data: {
                         currency: "usd",
                         product_data: {
-                            name: isGuest ? "One-Time Focus Session" : `${amountCents / 100} Focus Credits`,
+                            name: isGuest ? "Locked In Session" : `${amountCents / 100} Focus Credits`,
                             description: isGuest
                                 ? "Pay-per-session access (No account required)"
                                 : `Load $${(amountCents / 100).toFixed(2)} into your wallet`,
@@ -45,7 +45,7 @@ export async function POST(req: Request) {
                 },
             ],
             mode: "payment",
-            success_url: `${settingsUrl}/?success=true${isGuest ? '&guest=true' : ''}`,
+            success_url: `${settingsUrl}/?success=true${isGuest ? '&guest=true' : ''}${redirectParams ? `&${redirectParams}` : ''}`,
             cancel_url: `${settingsUrl}/?canceled=true`,
             metadata: {
                 userId: userId || "", // Empty for guests
