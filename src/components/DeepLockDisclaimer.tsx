@@ -67,7 +67,7 @@ export function DeepLockDisclaimer({ onConfirm, onCancel }: DeepLockDisclaimerPr
                         onClick={onCancel}
                         className="w-full text-zinc-500 hover:text-white hover:bg-zinc-800 h-12 rounded-xl"
                     >
-                        Nevermind, I'm not ready
+                        Nevermind, I&apos;m not ready
                     </Button>
                 </div>
 

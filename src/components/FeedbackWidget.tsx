@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type ChangeEvent } from "react"
 import { MessageSquarePlus, X, Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -59,15 +59,15 @@ export function FeedbackWidget() {
 
                             {sent ? (
                                 <div className="text-center py-6 text-green-400 text-sm font-medium">
-                                    Thank you! We're listening.
+                                    Thank you! We&apos;re listening.
                                 </div>
                             ) : (
                                 <div className="space-y-3">
                                     <Textarea
                                         placeholder="Ideas? Bugs? Rants? Tell us."
-                                        className="bg-black/50 border-zinc-700 text-sm h-24 resize-none focus:ring-blue-500/50"
+                                        className="bg-black/50 border-zinc-700 text-white text-sm h-24 resize-none focus:ring-blue-500/50"
                                         value={feedback}
-                                        onChange={(e) => setFeedback(e.target.value)}
+                                        onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setFeedback(e.target.value)}
                                     />
                                     <Button
                                         size="sm"

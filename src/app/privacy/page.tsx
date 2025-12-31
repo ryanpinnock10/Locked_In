@@ -30,7 +30,7 @@ export default function PrivacyPage() {
                     <section>
                         <h2 className="text-xl font-bold text-white mb-2">3. Activity Monitoring</h2>
                         <p>
-                            <strong>Strict Mode:</strong> We monitor document visibility state (e.g., tab switching) to enforce the "Lock In" contract. We do <strong>not</strong> record your screen, keystrokes, or browse history outside of this application.
+                            <strong>Strict Mode:</strong> We monitor document visibility state (e.g., tab switching) to enforce the &quot;Lock In&quot; contract. We do <strong>not</strong> record your screen, keystrokes, or browse history outside of this application.
                             We only know if our tab is active or hidden.
                         </p>
                     </section>
