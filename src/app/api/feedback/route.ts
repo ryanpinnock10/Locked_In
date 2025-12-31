@@ -3,7 +3,7 @@ import { Resend } from "resend"
 import { auth } from "@clerk/nextjs/server"
 import prisma from "@/lib/prisma"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 const ADMIN_EMAIL = process.env.ADMIN_EMAILS || "ryanpinnock10@gmail.com"
 
 export async function POST(req: NextRequest) {
@@ -24,12 +24,16 @@ export async function POST(req: NextRequest) {
         })
 
         // Send email to admin (optional, keeping it for notifications)
-        await resend.emails.send({
-            from: 'Locked In Feedback <onboarding@resend.dev>',
-            to: ADMIN_EMAIL,
-            subject: `New Feedback from ${userId ? "User" : "Guest"}`,
-            text: `User ID: ${userId || "Guest"}\n\nFeedback:\n${message}`,
-        })
+        if (resend) {
+            await resend.emails.send({
+                from: 'Locked In Feedback <onboarding@resend.dev>',
+                to: ADMIN_EMAIL,
+                subject: `New Feedback from ${userId ? "User" : "Guest"}`,
+                text: `User ID: ${userId || "Guest"}\n\nFeedback:\n${message}`,
+            })
+        } else {
+            console.warn("Resend API key missing, skipping email notification.")
+        }
 
         return NextResponse.json({ success: true })
     } catch (error) {
