@@ -15,6 +15,7 @@ export default function PrivacyPage() {
                         <ul className="list-disc pl-6 space-y-2">
                             <li><strong>Account Data:</strong> We use Clerk for authentication. We store your email and user ID.</li>
                             <li><strong>Session Data:</strong> We store the duration, intent, and success/failure status of your sessions to provide analytics.</li>
+                            <li><strong>Product Improvement:</strong> We collect anonymous usage data and feedback to improve the core product experience. By using Locked In, you agree to help us build a better tool for everyone.</li>
                             <li><strong>Guest Data:</strong> If you use Locked In as a guest, your session data is stored locally on your device (`localStorage`) and is not persisted to our databases.</li>
                         </ul>
                     </section>
@@ -29,7 +30,7 @@ export default function PrivacyPage() {
                     <section>
                         <h2 className="text-xl font-bold text-white mb-2">3. Activity Monitoring</h2>
                         <p>
-                            <strong>Strict Mode:</strong> We monitor document visibility state (e.g., tab switching) to enforce the "Lock In" contract. We do <strong>not</strong> record your screen, keystrokes, or browse history outside of this application.
+                            <strong>Strict Mode:</strong> We monitor document visibility state (e.g., tab switching) to enforce the &quot;Lock In&quot; contract. We do <strong>not</strong> record your screen, keystrokes, or browse history outside of this application.
                             We only know if our tab is active or hidden.
                         </p>
                     </section>

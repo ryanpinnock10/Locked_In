@@ -50,11 +50,11 @@ export function LandingPage({ onEnterApp }: { onEnterApp: () => void }) {
                         <span className="text-red-500">You are bleeding time.</span>
                     </h2>
                     <p className="text-zinc-400 text-lg leading-relaxed">
-                        Every notification, every "quick check" of social media resets your focus timer.
+                        Every notification, every &quot;quick check&quot; of social media resets your focus timer.
                         Research shows it takes <strong>23 minutes</strong> to regain deep focus after a distraction.
                     </p>
                     <p className="text-zinc-400 text-lg leading-relaxed">
-                        You aren't just wasting moments; you are defaulting on your potential. The algorithms are betting against you, and right now, <strong>they are winning.</strong>
+                        You aren&apos;t just wasting moments; you are defaulting on your potential. The algorithms are betting against you, and right now, <strong>they are winning.</strong>
                     </p>
                 </div>
                 <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-2xl relative overflow-hidden">

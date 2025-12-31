@@ -12,7 +12,7 @@ export default function TermsPage() {
 
                 <div className="space-y-6 text-zinc-300 leading-relaxed">
                     <section>
-                        <h2 className="text-xl font-bold text-white mb-2">1. The "Lock In" Agreement</h2>
+                        <h2 className="text-xl font-bold text-white mb-2">1. The &quot;Lock In&quot; Agreement</h2>
                         <p>
                             By starting a session on Locked In, you explicitly agree to our unique financial penalty mechanism.
                             You understand that <strong>money will be deducted</strong> from your wallet or balance if you fail to complete your session duration.

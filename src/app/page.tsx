@@ -14,7 +14,12 @@ import { AISuggestion } from "@/app/api/ai/suggest/route"
 import { DeepLockDisclaimer } from "@/components/DeepLockDisclaimer"
 import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs"
 import { LandingPage } from "@/components/LandingPage"
+import { Input } from "@/components/ui/input"
+import { FeedbackWidget } from "@/components/FeedbackWidget"
 import Link from "next/link"
+import { FailureScreen } from "@/components/FailureScreen"
+import { SuccessScreen } from "@/components/SuccessScreen"
+import { useCallback } from "react"
 
 export default function Home() {
   const { isSignedIn, user } = useUser()
@@ -45,6 +50,74 @@ export default function Home() {
   const [lockMode, setLockMode] = useState<'strict' | 'flexible'>('strict')
   const [showModeInfo, setShowModeInfo] = useState(false)
 
+  // Success State
+  const [showSuccessScreen, setShowSuccessScreen] = useState(false)
+  const [lastSessionDuration, setLastSessionDuration] = useState(0)
+
+  // Custom Pricing State
+  const [pricePerMinute, setPricePerMinute] = useState(20) // Default 20 cents/min
+
+  // HYDRATION FIX: Detect mount
+  const [isMounted, setIsMounted] = useState(false)
+  useEffect(() => {
+    setIsMounted(true)
+    setTimeout(() => setShowInputHint(false), 8000)
+  }, [])
+
+  const [showInputHint, setShowInputHint] = useState(true)
+
+  // HELPER FUNCTIONS (Hoisted & Memoized)
+  const requestWakeLock = useCallback(async () => {
+    try {
+      if ("wakeLock" in navigator) {
+        const sentinel = await navigator.wakeLock.request("screen")
+        setWakeLock(sentinel)
+      }
+    } catch (err) {
+      console.error("Wake Lock failed:", err)
+    }
+  }, [])
+
+  const releaseWakeLock = useCallback(async () => {
+    if (wakeLock) {
+      try {
+        await wakeLock.release()
+        setWakeLock(null)
+      } catch (err) {
+        console.error("Wake Lock release failed:", err)
+      }
+    }
+  }, [wakeLock])
+
+  const releaseKeyboardLock = useCallback(() => {
+    // @ts-ignore
+    if (navigator.keyboard && navigator.keyboard.unlock) {
+      try {
+        // @ts-ignore
+        navigator.keyboard.unlock()
+        console.log("Keyboard unlocked")
+      } catch (err) {
+        console.warn("Keyboard unlock failed", err)
+      }
+    }
+  }, [])
+
+  const saveSession = useCallback(async (status: 'completed' | 'failed') => {
+    const sessionId = localStorage.getItem("activeSessionId")
+    if (!sessionId) return
+
+    try {
+      await fetch("/api/sessions", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, status })
+      })
+      localStorage.removeItem("activeSessionId")
+    } catch (error) {
+      console.error("Failed to save session", error)
+    }
+  }, [])
+
   useEffect(() => {
     if (isSignedIn) {
       fetch("/api/user/balance")
@@ -52,7 +125,7 @@ export default function Home() {
         .then(data => setBalance(data.balance))
         .catch(err => console.error("Failed to fetch balance", err))
     }
-  }, [isSignedIn, activeTab, failureReason]) // Refetch when failure happens to show deducted balance
+  }, [isSignedIn, activeTab, failureReason, showSuccessScreen]) // Refetch on success/failure
 
   // Effect: When user signs in, ensure they land on dashboard
   useEffect(() => {
@@ -65,51 +138,7 @@ export default function Home() {
     if (storedMode === 'flexible') setLockMode('flexible')
   }, [isSignedIn])
 
-  // Payment Success Handling
-  useEffect(() => {
-    // Check if we just returned from Stripe
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('success') === 'true') {
 
-      const isGuestParams = params.get('guest') === 'true'
-      // Clear the param
-      window.history.replaceState({}, '', window.location.pathname)
-
-      if (isGuestParams) {
-        // GUEST RESTORATION
-        const pending = localStorage.getItem("pendingGuestSession")
-        if (pending) {
-          const { duration, intent } = JSON.parse(pending)
-          // startGuestSession is defined below, but useEffect captures it? 
-          // React hoisting (function declaration) works, but const function expressions might not if defined later.
-          // Wait, handleGuestCheckout was defined AFTER useEffect. 
-          // If startGuestSession is defined via 'const', it acts like a variable.
-          // Since it's inside the component, it might be TBD.
-          // To be safe, I should move startGuestSession ABOVE useEffect or use a ref?
-          // Or rely on JS event loop (useEffect runs after render).
-          // Let's assume startGuestSession is available since useEffect runs after mount.
-          startGuestSession(duration, intent)
-          localStorage.removeItem("pendingGuestSession")
-          alert("Guest Session Started! Good luck.")
-        } else {
-          alert("Payment successful, but session details were lost. Please set your timer again.")
-        }
-      } else {
-        // AUTHENTICATED RESTORATION
-        if (isSignedIn) {
-          fetch("/api/user/balance")
-            .then(res => res.json())
-            .then(data => setBalance(data.balance))
-        }
-        alert("Payment Successful! Credits added to your wallet.")
-      }
-      setActiveTab('dashboard')
-    }
-
-    if (params.get('canceled') === 'true') {
-      alert("Payment canceled.")
-    }
-  }, [isSignedIn])
 
   // Audio and Wake Lock functions removed
 
@@ -171,7 +200,7 @@ export default function Home() {
       document.removeEventListener("fullscreenchange", handleFullscreenChange)
       document.title = "Locked In"
     }
-  }, [isLocked])
+  }, [isLocked, lockMode, saveSession, releaseWakeLock, releaseKeyboardLock])
 
   // Re-request fullscreen periodically if locked (browser might block this, but worth a try)
   useEffect(() => {
@@ -182,7 +211,7 @@ export default function Home() {
       }
       restore()
     }
-  }, [timeLeft])
+  }, [timeLeft, isLocked])
 
   // STRICT ENFORCEMENT: Block DevTools and Escape
   useEffect(() => {
@@ -233,43 +262,11 @@ export default function Home() {
     return () => window.removeEventListener('keydown', handleKeyDown, true)
   }, [isLocked])
 
-  const requestWakeLock = async () => {
-    try {
-      if ("wakeLock" in navigator) {
-        const sentinel = await navigator.wakeLock.request("screen")
-        setWakeLock(sentinel)
-      }
-    } catch (err) {
-      console.error("Wake Lock failed:", err)
-    }
-  }
 
-  const releaseWakeLock = async () => {
-    if (wakeLock) {
-      try {
-        await wakeLock.release()
-        setWakeLock(null)
-      } catch (err) {
-        console.error("Wake Lock release failed:", err)
-      }
-    }
-  }
 
-  const saveSession = async (status: 'completed' | 'failed') => {
-    const sessionId = localStorage.getItem("activeSessionId")
-    if (!sessionId) return
 
-    try {
-      await fetch("/api/sessions", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, status })
-      })
-      localStorage.removeItem("activeSessionId")
-    } catch (error) {
-      console.error("Failed to save session", error)
-    }
-  }
+
+
 
   // Restore session on mount
   useEffect(() => {
@@ -294,7 +291,7 @@ export default function Home() {
         localStorage.removeItem("sessionIntent")
       }
     }
-  }, [])
+  }, [requestWakeLock])
 
   // Timer Logic
   useEffect(() => {
@@ -304,6 +301,12 @@ export default function Home() {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           setIsLocked(false)
+
+          // Capture duration for success screen
+          const durationMins = totalDuration ? Math.round(totalDuration / 60) : duration[0]
+          setLastSessionDuration(durationMins)
+          setShowSuccessScreen(true)
+
           localStorage.removeItem("targetEndTime")
           localStorage.removeItem("totalDuration")
           localStorage.removeItem("sessionIntent")
@@ -320,7 +323,7 @@ export default function Home() {
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [isLocked, timeLeft])
+  }, [isLocked, timeLeft, duration, totalDuration, releaseWakeLock, releaseKeyboardLock, saveSession])
 
   const handleLockIn = () => {
     if (!intent.trim()) return
@@ -340,8 +343,8 @@ export default function Home() {
 
   const handleGuestCheckout = async () => {
     const finalDuration = duration[0]
-    const rate = lockMode === 'flexible' ? 30 : 10
-    const cost = Math.round(finalDuration * rate)
+    const multiplier = lockMode === 'flexible' ? 3 : 1
+    const cost = Math.round(finalDuration * pricePerMinute * multiplier)
 
     // Save pending state
     localStorage.setItem("pendingGuestSession", JSON.stringify({
@@ -371,7 +374,7 @@ export default function Home() {
     }
   }
 
-  const startGuestSession = async (durationMinutes: number, sessionIntent: string) => {
+  const startGuestSession = useCallback(async (durationMinutes: number, sessionIntent: string) => {
     const seconds = durationMinutes * 60
 
     // Request Fullscreen/WakeLock locally
@@ -400,13 +403,45 @@ export default function Home() {
     setIntent(sessionIntent)
     setIsLocked(true)
     requestWakeLock()
-  }
+  }, [requestWakeLock])
+
+  // Payment Success Handling (Moved here to be after startGuestSession definition)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('success') === 'true') {
+      const isGuestParams = params.get('guest') === 'true'
+      window.history.replaceState({}, '', window.location.pathname)
+
+      if (isGuestParams) {
+        const pending = localStorage.getItem("pendingGuestSession")
+        if (pending) {
+          const { duration, intent } = JSON.parse(pending)
+          startGuestSession(duration, intent)
+          localStorage.removeItem("pendingGuestSession")
+          alert("Guest Session Started! Good luck.")
+        } else {
+          alert("Payment successful, but session details were lost.")
+        }
+      } else {
+        if (isSignedIn) {
+          fetch("/api/user/balance")
+            .then(res => res.json())
+            .then(data => setBalance(data.balance))
+        }
+        alert("Credits added to wallet.")
+      }
+      setActiveTab('dashboard')
+    }
+    if (params.get('canceled') === 'true') {
+      alert("Payment canceled.")
+    }
+  }, [isSignedIn, startGuestSession])
 
   const startSession = async (suggestedDuration?: number) => {
     const finalDuration = suggestedDuration || duration[0]
     const seconds = finalDuration * 60
-    const rate = lockMode === 'flexible' ? 30 : 10
-    const cost = Math.round(finalDuration * rate)
+    const multiplier = lockMode === 'flexible' ? 3 : 1
+    const cost = Math.round(finalDuration * pricePerMinute * multiplier)
 
     // REQUEST FULLSCREEN AND LOCK KEYBOARD IMMEDIATELY (User Gesture)
     try {
@@ -579,18 +614,7 @@ export default function Home() {
     }
   }
 
-  const releaseKeyboardLock = () => {
-    // @ts-ignore
-    if (navigator.keyboard && navigator.keyboard.unlock) {
-      try {
-        // @ts-ignore
-        navigator.keyboard.unlock()
-        console.log("Keyboard unlocked")
-      } catch (err) {
-        console.warn("Keyboard unlock failed", err)
-      }
-    }
-  }
+
 
   const handleUnlockRequest = () => setShowUnlockFlow(true)
 
@@ -603,6 +627,7 @@ export default function Home() {
     releaseWakeLock()
     releaseKeyboardLock()
     saveSession('failed')
+    setFailureReason("You chose to give up. The easy way request is denied... just kidding, you're out.")
   }
 
   const handleUnlockCancel = () => setShowUnlockFlow(false)
@@ -629,29 +654,26 @@ export default function Home() {
     </div>
   )
 
+  if (!isMounted) return null
+
   if (failureReason) {
     return (
-      <main className="min-h-screen bg-black text-white font-sans flex items-center justify-center p-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-red-950/20 z-0 animate-pulse" />
-        <Card className="w-full max-w-md bg-zinc-900 border-red-900/50 p-8 flex flex-col items-center text-center gap-6 z-10 shadow-2xl shadow-red-900/20">
-          <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center">
-            <ShieldCheck className="w-10 h-10 text-red-500" />
-          </div>
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-red-500">SESSION FAILED</h1>
-            <p className="text-zinc-400">{failureReason}</p>
-          </div>
-          <div className="p-4 bg-red-950/30 rounded-lg border border-red-900/30 w-full">
-            <p className="text-sm text-red-300">Your wager based on time remaining has been forfeited.</p>
-          </div>
-          <Button
-            onClick={() => setFailureReason(null)}
-            className="w-full bg-white text-black hover:bg-zinc-200 font-bold"
-          >
-            I Understand
-          </Button>
-        </Card>
-      </main>
+      <FailureScreen
+        reason={failureReason}
+        onAcknowledge={() => setFailureReason(null)}
+      />
+    )
+  }
+
+  if (showSuccessScreen) {
+    return (
+      <SuccessScreen
+        duration={lastSessionDuration}
+        onReturn={() => {
+          setShowSuccessScreen(false)
+          setActiveTab('dashboard')
+        }}
+      />
     )
   }
 
@@ -777,7 +799,7 @@ export default function Home() {
                 exit={{ opacity: 0, x: -20 }}
                 className="flex flex-col items-center justify-center h-full pb-20"
               >
-                {/* Lock In Card (Reused) */}
+                {/* Lock In Card */}
                 <Card className="w-full max-w-md bg-zinc-900/50 border-zinc-800 backdrop-blur-xl p-8 flex flex-col gap-8 shadow-2xl">
                   <div className="text-center space-y-2">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-zinc-800/50 mb-4 ring-1 ring-zinc-700">
@@ -789,6 +811,20 @@ export default function Home() {
 
                   <div className="space-y-6">
                     {/* Intent Input */}
+                    <AnimatePresence>
+                      {showInputHint && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="flex items-center justify-center gap-2 text-xs text-blue-400 bg-blue-500/10 p-2 rounded-lg border border-blue-500/20 mb-4"
+                        >
+                          <Info className="w-3 h-3" />
+                          <span>Tip: Tap the numbers to enter a custom value</span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
                         <label className="text-sm font-medium text-zinc-300">I am locking in to...</label>
@@ -812,14 +848,28 @@ export default function Home() {
                     </div>
 
                     <div className="space-y-4">
-                      <div className="flex justify-between items-center">
+                      <div className="flex justify-between items-center gap-4">
                         <label className="text-sm font-medium text-zinc-300 flex items-center gap-2">
                           <Clock className="w-4 h-4" />
-                          Duration
+                          Duration (min)
                         </label>
-                        <span className="text-2xl font-bold tabular-nums text-blue-400">
-                          {duration[0]} <span className="text-sm font-normal text-zinc-500">min</span>
-                        </span>
+                        <div className="relative group">
+                          <Input
+                            type="number"
+                            value={duration[0] === 0 ? '' : duration[0]}
+                            onChange={(e) => {
+                              const val = e.target.value === '' ? 0 : parseInt(e.target.value)
+                              setDuration([Math.max(0, val)])
+                            }}
+                            onBlur={(e) => {
+                              let val = parseInt(e.target.value) || 5
+                              if (val < 5) val = 5
+                              setDuration([val])
+                            }}
+                            className="w-24 bg-transparent border-transparent hover:bg-zinc-800/50 focus:bg-zinc-900 border hover:border-zinc-700 focus:border-blue-500/50 transition-all text-right font-mono text-xl text-white p-0 h-auto focus:ring-0"
+                          />
+                          <div className="absolute top-0 right-0 -mr-2 -mt-2 w-2 h-2 bg-blue-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
                       </div>
                       <Slider
                         value={duration}
@@ -829,93 +879,137 @@ export default function Home() {
                         min={5}
                         className="py-4"
                       />
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center gap-4">
+                        <label className="text-sm font-medium text-zinc-300 flex items-center gap-2">
+                          <span className="text-green-500">$</span>
+                          Base Wager / Minute (¢)
+                          <button
+                            onClick={() => alert("This is the base amount you wager per minute. In specific modes like 'Flexible', a multiplier may apply.")}
+                            className="text-zinc-600 hover:text-zinc-400 transition-colors ml-1"
+                          >
+                            <Info className="w-3 h-3" />
+                          </button>
+                        </label>
+                        <Input
+                          type="number"
+                          value={pricePerMinute === 0 ? '' : pricePerMinute}
+                          onChange={(e) => {
+                            const val = e.target.value === '' ? 0 : parseInt(e.target.value)
+                            setPricePerMinute(Math.max(0, val))
+                          }}
+                          onBlur={(e) => {
+                            let val = parseInt(e.target.value) || 20
+                            if (val < 20) val = 20
+                            setPricePerMinute(val)
+                          }}
+                          className="w-24 bg-transparent border-transparent hover:bg-zinc-800/50 focus:bg-zinc-900 border hover:border-zinc-700 focus:border-blue-500/50 transition-all text-right font-mono text-xl text-green-400 font-bold p-0 h-auto focus:ring-0"
+                        />
+                      </div>
+
+                      <Slider
+                        value={[Math.min(pricePerMinute, 100)]}
+                        onValueChange={(val) => setPricePerMinute(val[0])}
+                        max={100}
+                        step={5}
+                        min={20}
+                        className="py-4"
+                      />
                       <div className="flex justify-between text-xs text-zinc-500">
-                        <span>5m</span>
-                        <span>3h</span>
+                        <span>20¢</span>
+                        <span>$1.00+</span>
                       </div>
-
-                      <div className="pt-4 space-y-4 border-t border-zinc-800/50">
-
-                        {/* MODE TOGGLE */}
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center px-1">
-                            <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Lock Mode</span>
-                            <button
-                              onClick={() => setShowModeInfo(!showModeInfo)}
-                              className="text-zinc-500 hover:text-white transition-colors"
-                            >
-                              <Info className="w-4 h-4" />
-                            </button>
-                          </div>
-
-                          {showModeInfo && (
-                            <div className="p-3 bg-zinc-900/80 rounded-lg border border-zinc-700 text-xs text-zinc-300 space-y-2 mb-2">
-                              <p><strong className="text-white">Strict ($0.10/min):</strong> Classic mode. If you switch tabs or minimize, you fail immediately.</p>
-                              <p><strong className="text-blue-400">Flexible ($0.30/min):</strong> Premium mode. Allows research (tab switching) without penalty.</p>
-                            </div>
-                          )}
-
-                          <div className="flex gap-2 p-1 bg-zinc-900 rounded-lg border border-zinc-700">
-                            <Button
-                              variant="ghost"
-                              className={`flex-1 h-8 text-xs ${lockMode === 'strict' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
-                              onClick={() => { setLockMode('strict'); localStorage.setItem("lockMode", 'strict') }}
-                            >
-                              Strict ($0.10/m)
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              className={`flex-1 h-8 text-xs ${lockMode === 'flexible' ? 'bg-zinc-800 text-blue-400 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
-                              onClick={() => { setLockMode('flexible'); localStorage.setItem("lockMode", 'flexible') }}
-                            >
-                              Flexible ($0.30/m)
-                            </Button>
-                          </div>
-                        </div>
-
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-zinc-400">Current Balance</span>
-                          <span className="font-mono text-zinc-300">
-                            {balance !== null ? `$${(balance / 100).toFixed(2)}` : "..."}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-zinc-400">Session Cost</span>
-                          <span className="text-xl font-bold text-green-400">
-                            ${(duration[0] * (lockMode === 'strict' ? 0.10 : 0.30)).toFixed(2)}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-zinc-400">Remaining After</span>
-                          <span className={`font-mono font-bold ${(balance || 0) - (duration[0] * (lockMode === 'strict' ? 10 : 30)) < 0 ? "text-red-400" : "text-zinc-300"
-                            }`}>
-                            {balance !== null
-                              ? `$${((balance - (duration[0] * (lockMode === 'strict' ? 10 : 30))) / 100).toFixed(2)}`
-                              : "..."}
-                          </span>
-                        </div>
-                      </div>
+                      <p className="text-xs text-center text-zinc-500">
+                        Total cost: <span className="text-white font-bold">${((duration[0] * pricePerMinute * (lockMode === 'flexible' ? 3 : 1)) / 100).toFixed(2)}</span>
+                        {lockMode === 'flexible' && <span className="ml-1 text-blue-400 text-[10px] uppercase font-bold tracking-wider">(3x Multiplier)</span>}
+                        <br />
+                        <span className="opacity-50">if you fail. $0 if you succeed.</span>
+                      </p>
                     </div>
-
-                    <div className="space-y-3 pt-4 border-t border-zinc-800">
-                      <div className="flex items-center gap-3 text-sm text-zinc-400 bg-zinc-900/50 p-3 rounded-lg border border-zinc-800/50">
-                        <ShieldCheck className="w-4 h-4 text-green-500 shrink-0" />
-                        <span>Triple confirmation required to unlock early.</span>
-                      </div>
-                    </div>
-
-                    <Button
-                      size="lg"
-                      className="w-full bg-white text-black hover:bg-zinc-200 font-bold text-lg h-14 shadow-lg shadow-white/5 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                      onClick={handleLockIn}
-                      disabled={!intent.trim()}
-                    >
-                      Lock In Now
-                    </Button>
                   </div>
-                </Card>
+
+                  <div className="pt-4 space-y-4 border-t border-zinc-800/50">
+
+                    {/* MODE TOGGLE */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center px-1">
+                        <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Lock Mode</span>
+                        <button
+                          onClick={() => setShowModeInfo(!showModeInfo)}
+                          className="text-zinc-500 hover:text-white transition-colors"
+                        >
+                          <Info className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {showModeInfo && (
+                        <div className="p-3 bg-zinc-900/80 rounded-lg border border-zinc-700 text-xs text-zinc-300 space-y-2 mb-2">
+                          <p><strong className="text-white">Strict:</strong> Classic mode. If you switch tabs or minimize, you fail immediately.</p>
+                          <p><strong className="text-blue-400">Flexible:</strong> Premium mode. Allows research (tab switching) without penalty. <span className="text-blue-300 font-bold">Costs 3x base wager.</span></p>
+                        </div>
+                      )}
+
+                      <div className="flex gap-2 p-1 bg-zinc-900 rounded-lg border border-zinc-700">
+                        <Button
+                          variant="ghost"
+                          className={`flex-1 h-8 text-xs ${lockMode === 'strict' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                          onClick={() => { setLockMode('strict'); localStorage.setItem("lockMode", 'strict') }}
+                        >
+                          Strict (1x)
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          className={`flex-1 h-8 text-xs ${lockMode === 'flexible' ? 'bg-zinc-800 text-blue-400 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                          onClick={() => { setLockMode('flexible'); localStorage.setItem("lockMode", 'flexible') }}
+                        >
+                          Flexible (3x)
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-zinc-400">Current Balance</span>
+                      <span className="font-mono text-zinc-300">
+                        {balance !== null ? `$${(balance / 100).toFixed(2)}` : "..."}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-zinc-400">Session Cost</span>
+                      <span className="text-xl font-bold text-green-400">
+                        ${(duration[0] * pricePerMinute * (lockMode === 'flexible' ? 3 : 1) / 100).toFixed(2)}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-zinc-400">Remaining After</span>
+                      <span className={`font-mono font-bold ${(balance || 0) - (duration[0] * pricePerMinute) < 0 ? "text-red-400" : "text-zinc-300"
+                        }`}>
+                        {balance !== null
+                          ? `$${((balance - (duration[0] * pricePerMinute)) / 100).toFixed(2)}`
+                          : "..."}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 pt-4 border-t border-zinc-800">
+                    <div className="flex items-center gap-3 text-sm text-zinc-400 bg-zinc-900/50 p-3 rounded-lg border border-zinc-800/50">
+                      <ShieldCheck className="w-4 h-4 text-green-500 shrink-0" />
+                      <span>Triple confirmation required to unlock early.</span>
+                    </div>
+                  </div>
+
+                  <Button
+                    size="lg"
+                    className="w-full bg-white text-black hover:bg-zinc-200 font-bold text-lg h-14 shadow-lg shadow-white/5 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    onClick={handleLockIn}
+                    disabled={!intent.trim()}
+                  >
+                    Lock In Now
+                  </Button>
+                </Card >
 
                 {showAIAssistant && (
                   <AIAssistant
@@ -930,24 +1024,29 @@ export default function Home() {
                       triggerDeepLock()
                     }}
                   />
-                )}
+                )
+                }
 
-                {showDeepLockDisclaimer && (
-                  <DeepLockDisclaimer
-                    onConfirm={() => {
-                      setShowDeepLockDisclaimer(false)
-                      startSession(pendingDuration)
-                    }}
-                    onCancel={() => {
-                      setShowDeepLockDisclaimer(false)
-                      setPendingDuration(undefined)
-                    }}
-                  />
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+                {
+                  showDeepLockDisclaimer && (
+                    <DeepLockDisclaimer
+                      onConfirm={() => {
+                        setShowDeepLockDisclaimer(false)
+                        startSession(pendingDuration)
+                      }}
+                      onCancel={() => {
+                        setShowDeepLockDisclaimer(false)
+                        setPendingDuration(undefined)
+                      }}
+                    />
+                  )
+                }
+              </motion.div >
+            )
+            }
+          </AnimatePresence >
+        </div >
+        <FeedbackWidget />
       </main >
     )
   }
@@ -962,6 +1061,7 @@ export default function Home() {
       </div>
 
       <LandingPage onEnterApp={() => setHasEnteredApp(true)} />
+
     </main>
   )
 }
