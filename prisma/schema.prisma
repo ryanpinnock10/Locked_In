@@ -88,3 +88,13 @@ model AnalyticsEvent {
   @@index([visitorId])
   @@index([createdAt])
 }
+
+model TweetQueue {
+  id            String    @id @default(cuid())
+  content       String
+  status        String    @default("PENDING") // PENDING, POSTED, FAILED
+  scheduledFor  DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  postedAt      DateTime?
+  failureReason String?
+}

@@ -8,6 +8,7 @@ import { ThreatReport } from "@/components/admin/ThreatReport"
 import { VisitorChart } from "@/components/admin/VisitorChart"
 import { DeviceStats } from "@/components/admin/DeviceStats"
 import { CountryStats } from "@/components/admin/CountryStats"
+import { SocialManager } from "@/components/admin/SocialManager"
 
 async function getStats() {
     const totalUsers = await prisma.user.count()
@@ -216,7 +217,10 @@ export default async function AdminOverview() {
                 })}
             </div>
 
-            <ThreatReport />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <ThreatReport />
+                <SocialManager />
+            </div>
 
             <InsightsPanel
                 avgDuration={stats.insights.avgDuration}
