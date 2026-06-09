@@ -51,7 +51,7 @@ jobs:
         run: npx prisma generate
 
       - name: Push schema to test database
-        run: npx prisma db push --skip-generate
+        run: npx prisma db push
 
       - name: Run functional + security audit suite
         run: npx tsx tests/audit.test.ts
