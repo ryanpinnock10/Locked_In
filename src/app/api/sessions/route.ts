@@ -34,12 +34,20 @@ export async function POST(req: NextRequest) {
         console.log(`[SESSIONS_POST] Request from ${userId}: cost=${cost}, mode=${mode || 'strict'}`)
 
         const result = await prisma.$transaction(async (tx) => {
-            const user = await tx.user.findUnique({
-                where: { id: userId },
-                select: { balance: true }
+            // FIX #5 (concurrency): Atomically check-and-decrement the balance in a
+            // SINGLE conditional UPDATE. The previous read-then-decrement pattern was
+            // a TOCTOU race: under READ COMMITTED, many concurrent starts could all
+            // read the same balance, all pass `balance < cost`, and all decrement —
+            // overselling and driving the balance negative. `updateMany` with a
+            // `balance >= cost` guard compiles to `UPDATE ... WHERE balance >= cost`,
+            // which Postgres locks and evaluates atomically per row. If it affects 0
+            // rows, the user either doesn't exist or can't afford the stake.
+            const charge = await tx.user.updateMany({
+                where: { id: userId, balance: { gte: cost } },
+                data: { balance: { decrement: cost } },
             })
 
-            if (!user || user.balance < cost) {
+            if (charge.count === 0) {
                 return { error: "Insufficient funds", status: 402 }
             }
 
@@ -69,11 +77,6 @@ export async function POST(req: NextRequest) {
                     // startTime is set server-side via @default(now()) and is the
                     // source of truth for completion validation (FIX #4).
                 }
-            })
-
-            await tx.user.update({
-                where: { id: userId },
-                data: { balance: { decrement: cost } }
             })
 
             return { session, transaction, status: 200 }
@@ -127,8 +130,9 @@ export async function PATCH(req: NextRequest) {
                 return { error: "Session not found", status: 404 as const }
             }
 
-            // Idempotency: a session can only be finalized once. Re-finalizing must
-            // never trigger a second refund.
+            // Idempotency (fast path): a session can only be finalized once. This
+            // early return short-circuits an already-finalized session, but it is
+            // NOT the concurrency guard — see the atomic updateMany below.
             if (existing.status !== "active") {
                 return { session: existing, refunded: 0, status: 200 as const }
             }
@@ -147,13 +151,28 @@ export async function PATCH(req: NextRequest) {
             const didSucceed = success === true && timeRequirementMet
             const finalStatus = didSucceed ? "completed" : "failed"
 
-            const session = await tx.focusSession.update({
-                where: { id: sessionId },
-                data: {
-                    status: finalStatus,
-                    endTime: new Date(),
-                },
+            // FIX #5 (concurrency): Atomically flip active -> final state and use the
+            // affected-row count as the idempotency gate. The previous
+            // read-status-then-update pattern was a TOCTOU race: under READ COMMITTED,
+            // many concurrent finalizes could all read status === "active", all pass
+            // the guard above, and all issue a refund (double/N-times refund). By
+            // making the status transition a single conditional UPDATE
+            // (`WHERE id = ? AND status = 'active'`), Postgres guarantees exactly ONE
+            // concurrent caller wins (count === 1) and performs the refund; every
+            // other racer affects 0 rows and skips the refund.
+            const claim = await tx.focusSession.updateMany({
+                where: { id: sessionId, status: "active" },
+                data: { status: finalStatus, endTime: new Date() },
             })
+
+            if (claim.count === 0) {
+                // Lost the race: another concurrent request already finalized this
+                // session. Return the current state without refunding again.
+                const current = await tx.focusSession.findUnique({ where: { id: sessionId } })
+                return { session: current, refunded: 0, status: 200 as const }
+            }
+
+            const session = await tx.focusSession.findUnique({ where: { id: sessionId } })
 
             // FIX #1: Refund the stake on a verified successful completion.
             // The stake was deducted at start (USAGE). On success we credit it back
