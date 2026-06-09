@@ -3,8 +3,15 @@ import prisma from '@/lib/prisma';
 import { sendTweet } from '@/lib/twitter';
 
 export async function POST(req: NextRequest) {
-    // SECURITY NOTE: In a real production app, verify a CRON_SECRET header here.
-    // For this prototype, we'll allow it to be triggered publicly or via admin.
+    // SECURITY: this endpoint flushes and posts the social queue, so it must not
+    // be publicly triggerable. Require a shared secret. Vercel Cron sends this as
+    // `Authorization: Bearer ${CRON_SECRET}`; a manual admin trigger can use the
+    // same header. If CRON_SECRET is unset we fail closed (deny) rather than open.
+    const cronSecret = process.env.CRON_SECRET
+    const authHeader = req.headers.get("authorization")
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
 
     try {
         const now = new Date();

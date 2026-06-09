@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth, clerkClient } from "@clerk/nextjs/server"
+import { currentUser } from "@clerk/nextjs/server"
+import { checkAdmin } from "@/lib/admin-auth"
 import prisma from "@/lib/prisma"
 import { GoogleGenerativeAI } from "@google/generative-ai"
 import { Resend } from "resend"
@@ -29,22 +30,14 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: `Server Configuration Error: Missing ${missing.join(", ")}` }, { status: 500 })
         }
 
-        const { userId } = await auth()
-        if (!userId) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        // Verify Admin via the shared guard (DB role OR ADMIN_EMAILS allowlist).
+        const admin = await checkAdmin()
+        if (!admin.ok) {
+            return NextResponse.json({ error: admin.status === 401 ? "Unauthorized" : "Forbidden" }, { status: admin.status })
         }
-
-        // Verify Admin Role
-        const client = await clerkClient()
-        const user = await client.users.getUser(userId)
-        const role = user.publicMetadata.role as string
-
-        if (role !== "ADMIN") {
-            // Fallback: Check hardcoded admin email for dev/testing if role not set
-            const email = user.emailAddresses[0]?.emailAddress
-            if (email !== process.env.ADMIN_EMAILS) {
-                return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-            }
+        const user = await currentUser()
+        if (!user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
         // 1. Gather Data
