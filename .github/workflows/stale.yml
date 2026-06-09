@@ -1,0 +1,35 @@
+name: Stale Housekeeping
+
+# Housekeeping "agent": flags and closes inactive issues/PRs so the backlog
+# stays signal-rich.
+
+on:
+  schedule:
+    - cron: "0 9 * * *" # Daily 09:00 UTC
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        with:
+          days-before-stale: 30
+          days-before-close: 7
+          stale-issue-label: "stale"
+          stale-pr-label: "stale"
+          exempt-issue-labels: "pinned,security,wip"
+          exempt-pr-labels: "pinned,security,wip"
+          stale-issue-message: >-
+            This issue has been inactive for 30 days and is now marked stale.
+            Comment to keep it open, otherwise it will be closed in 7 days.
+          stale-pr-message: >-
+            This PR has been inactive for 30 days and is now marked stale.
+            Push a commit or comment to keep it open, otherwise it will be
+            closed in 7 days.
+          close-issue-message: "Closing as stale. Reopen if still relevant."
+          close-pr-message: "Closing as stale. Reopen if still relevant."

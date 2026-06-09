@@ -1,0 +1,11 @@
+# Default owner — auto-requested for review on every PR.
+* @ryanpinnock10
+
+# Money-path and security-sensitive code: always route to the owner.
+/src/app/api/sessions/        @ryanpinnock10
+/src/app/api/stripe/          @ryanpinnock10
+/src/app/api/admin/           @ryanpinnock10
+/src/app/api/cron/            @ryanpinnock10
+/src/lib/admin-auth.ts        @ryanpinnock10
+/prisma/                      @ryanpinnock10
+/.github/                     @ryanpinnock10

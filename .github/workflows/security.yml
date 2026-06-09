@@ -1,0 +1,77 @@
+name: Security Scan
+
+# Automated security "agent": scans every push and PR (and daily) for leaked
+# secrets, code vulnerabilities (SAST), and vulnerable dependencies.
+# Ported from the Immiglobal security playbook (Gitleaks + Semgrep + npm audit).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Daily at 08:00 UTC
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  gitleaks:
+    name: Secret Scanning (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  semgrep:
+    name: Static Analysis (Semgrep SAST)
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run Semgrep
+        # Curated rulesets for security, secrets, and TypeScript/JS/Next.js.
+        run: |
+          semgrep ci \
+            --config p/security-audit \
+            --config p/secrets \
+            --config p/typescript \
+            --config p/javascript \
+            --config p/nextjs
+        env:
+          SEMGREP_RULES: >-
+            p/security-audit p/secrets p/typescript p/javascript p/nextjs
+
+  npm-audit:
+    name: Dependency Audit (npm)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+        env:
+          DATABASE_URL: "postgresql://postgres:password@localhost:5432/postgres"
+      - name: Audit (fail on critical)
+        # High/moderate are reported but do not fail the build; criticals block.
+        run: |
+          npm audit --audit-level=critical
+      - name: Full audit report (informational)
+        if: always()
+        run: npm audit || true
