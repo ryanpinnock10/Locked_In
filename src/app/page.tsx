@@ -830,7 +830,7 @@ export default function Home() {
           )}
 
           {isSignedIn ? (
-            <UserButton afterSignOutUrl="/" />
+            <UserButton />
           ) : (
             <div className="flex gap-2">
               <SignInButton mode="modal">
