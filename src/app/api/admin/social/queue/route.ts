@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { auth } from '@clerk/nextjs/server';
+import { checkAdmin } from '@/lib/admin-auth';
 
 // Force IDE refresh
 export async function GET(req: NextRequest) {
     try {
-        const { userId } = await auth();
-        if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const admin = await checkAdmin();
+        if (!admin.ok) return NextResponse.json({ error: admin.status === 401 ? 'Unauthorized' : 'Forbidden' }, { status: admin.status });
 
         const queue = await prisma.tweetQueue.findMany({
             orderBy: { scheduledFor: 'asc' }
@@ -20,8 +20,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     try {
-        const { userId } = await auth();
-        if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const admin = await checkAdmin();
+        if (!admin.ok) return NextResponse.json({ error: admin.status === 401 ? 'Unauthorized' : 'Forbidden' }, { status: admin.status });
 
         const { content, scheduledFor } = await req.json();
 
@@ -45,8 +45,8 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
     try {
-        const { userId } = await auth();
-        if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const admin = await checkAdmin();
+        if (!admin.ok) return NextResponse.json({ error: admin.status === 401 ? 'Unauthorized' : 'Forbidden' }, { status: admin.status });
 
         const { searchParams } = new URL(req.url);
         const id = searchParams.get('id');

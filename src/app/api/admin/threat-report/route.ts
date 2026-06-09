@@ -1,7 +1,7 @@
 import { google } from "@ai-sdk/google"
 import { streamText } from "ai"
 import prisma from "@/lib/prisma"
-import { currentUser } from "@clerk/nextjs/server"
+import { checkAdmin } from "@/lib/admin-auth"
 import { NextResponse } from "next/server"
 
 // Allow streaming responses up to 30 seconds
@@ -9,18 +9,10 @@ export const maxDuration = 30
 
 export async function POST(req: Request) {
     try {
-        const user = await currentUser()
-
-        // simple admin check via metadata or email (adjust based on your auth setup)
-        // For now, assuming anyone with access to the /admin route is protected by Middleware
-        // But let's add a basic check if possible, or skip if middleware handles it.
-        // best practice: verify role
-        const dbUser = await prisma.user.findUnique({
-            where: { id: user?.id }
-        })
-
-        if (dbUser?.role !== "ADMIN") {
-            return new NextResponse("Unauthorized", { status: 401 })
+        // Admin guard via the shared helper (DB role OR ADMIN_EMAILS allowlist).
+        const admin = await checkAdmin()
+        if (!admin.ok) {
+            return new NextResponse(admin.status === 401 ? "Unauthorized" : "Forbidden", { status: admin.status })
         }
 
         // 1. Fetch Stats

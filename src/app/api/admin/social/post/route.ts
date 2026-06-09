@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendTweet } from '@/lib/twitter';
-import { auth } from '@clerk/nextjs/server';
+import { checkAdmin } from '@/lib/admin-auth';
 
 export async function POST(req: NextRequest) {
     try {
-        // 1. Admin Guard
-        const { userId } = await auth();
-        // Ideally check if userId is admin, but for now assuming authenticated user in admin route is sufficient 
-        // or relying on middleware protection for /admin routes.
-        if (!userId) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        // 1. Admin Guard — require an ADMIN role / allowlisted email, not just login.
+        const admin = await checkAdmin();
+        if (!admin.ok) {
+            return NextResponse.json({ error: admin.status === 401 ? 'Unauthorized' : 'Forbidden' }, { status: admin.status });
         }
 
         // 2. Parse Body
