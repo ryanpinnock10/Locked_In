@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
-import { Twitter, Send, AlertCircle, CheckCircle2, Clock, Trash2, Play } from 'lucide-react';
+// lucide-react v1 removed the deprecated `Twitter` brand icon; `X` is the
+// current rebrand icon. Aliased to TwitterIcon to keep JSX readable.
+import { X as TwitterIcon, Send, AlertCircle, CheckCircle2, Clock, Trash2, Play } from 'lucide-react';
 import { format } from 'date-fns';
 
 type QueueItem = {
@@ -108,7 +110,7 @@ export function SocialManager() {
         <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-4">
             <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                    <Twitter className="w-5 h-5 text-blue-400" />
+                    <TwitterIcon className="w-5 h-5 text-blue-400" />
                     <h3 className="text-lg font-medium text-white">X / Twitter Manager</h3>
                 </div>
                 <div className="flex bg-zinc-950 rounded p-1 border border-zinc-800">

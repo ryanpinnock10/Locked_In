@@ -37,7 +37,7 @@ Locked In is an aggressive productivity tool that gamifies focus with financial 
 
 | Layer        | Technology                                                    |
 | ------------ | ------------------------------------------------------------- |
-| Framework    | [Next.js 15](https://nextjs.org/) (App Router) + React 19     |
+| Framework    | [Next.js 16](https://nextjs.org/) (App Router, Turbopack) + React 19 |
 | Language     | TypeScript                                                    |
 | Styling      | Tailwind CSS + Framer Motion                                  |
 | Database     | PostgreSQL via [Prisma 7](https://www.prisma.io/) (pg adapter)|
