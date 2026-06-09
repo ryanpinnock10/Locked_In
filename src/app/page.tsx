@@ -129,11 +129,20 @@ export default function Home() {
     if (!sessionId) return
 
     try {
-      await fetch("/api/sessions", {
+      const res = await fetch("/api/sessions", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, status })
+        // Send `success` so the server can verify the timer and refund the stake
+        // on a genuine completion (server is the source of truth, see API route).
+        body: JSON.stringify({ sessionId, status, success: status === "completed" })
       })
+      // Refresh wallet balance so a refunded stake is reflected immediately.
+      if (res.ok && isSignedIn) {
+        fetch("/api/user/balance")
+          .then(r => r.json())
+          .then(data => setBalance(data.balance))
+          .catch(() => { })
+      }
       localStorage.removeItem("activeSessionId")
     } catch (error) {
       console.error("Failed to save session", error)
